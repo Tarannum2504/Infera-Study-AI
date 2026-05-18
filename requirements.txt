@@ -1,0 +1,6 @@
+streamlit
+pandas
+bcrypt
+huggingface_hub
+python-dotenv
+altair

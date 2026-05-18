@@ -1,0 +1,361 @@
+import streamlit as st
+import bcrypt
+import sqlite3
+import re
+import time
+from datetime import datetime, timedelta
+from database.db import get_connection
+
+# Rate limiting storage (use Redis or database in production with multiple users)
+FAILED_LOGINS = {}
+
+def hash_password(password: str) -> str:
+    """Hash password with bcrypt - 12 rounds is secure and performant"""
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(rounds=12)).decode('utf-8')
+
+def check_password(password: str, hashed: str) -> bool:
+    """Verify password against bcrypt hash"""
+    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+
+def is_rate_limited(email: str) -> tuple[bool, str]:
+    """
+    Prevent brute-force attacks with progressive delays and lockouts
+    Returns: (is_limited, message)
+    """
+    if email not in FAILED_LOGINS:
+        return False, ""
+    
+    attempts, first_attempt, lockout_until = FAILED_LOGINS[email]
+    
+    # Check if account is currently locked
+    if lockout_until and datetime.now() < lockout_until:
+        remaining = (lockout_until - datetime.now()).seconds // 60
+        return True, f"Too many failed attempts. Try again in {remaining} minutes."
+    
+    # Reset after 15 minutes of inactivity
+    if datetime.now() - first_attempt > timedelta(minutes=15):
+        del FAILED_LOGINS[email]
+        return False, ""
+    
+    # Progressive delay for repeated failures
+    if attempts >= 3:
+        time.sleep(2)  # 2 second delay after 3 failures
+    elif attempts >= 2:
+        time.sleep(1)  # 1 second delay after 2 failures
+    
+    return False, ""
+
+def record_failed_login(email: str):
+    """Track failed attempts for rate limiting and lockout"""
+    now = datetime.now()
+    
+    if email not in FAILED_LOGINS:
+        FAILED_LOGINS[email] = [1, now, None]
+    else:
+        attempts, first_attempt, _ = FAILED_LOGINS[email]
+        attempts += 1
+        
+        # Lock account after 5 failed attempts within 15 minutes
+        if attempts >= 5:
+            lockout_until = now + timedelta(minutes=15)
+            FAILED_LOGINS[email] = [attempts, first_attempt, lockout_until]
+        else:
+            FAILED_LOGINS[email] = [attempts, first_attempt, None]
+
+def validate_email(email: str) -> bool:
+    """Strict email format validation"""
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, email))
+
+def validate_password_strength(password: str) -> tuple[bool, str]:
+    """
+    Enforce strong password requirements
+    Returns: (is_valid, message)
+    """
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters"
+    if not re.search(r'[A-Z]', password):
+        return False, "Password must contain at least one uppercase letter"
+    if not re.search(r'[a-z]', password):
+        return False, "Password must contain at least one lowercase letter"
+    if not re.search(r'\d', password):
+        return False, "Password must contain at least one number"
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+        return False, "Password must contain at least one special character"
+    
+    return True, "Password is strong ✓"
+
+def login_user(email: str, password: str) -> bool:
+    """
+    Secure login with rate limiting, account lockout, and timing attack prevention
+    """
+    # Normalize email to lowercase
+    email = email.lower().strip()
+    
+    # Check rate limiting before any database query
+    is_limited, limit_message = is_rate_limited(email)
+    if is_limited:
+        st.error(limit_message)
+        return False
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Get user with account status
+        cursor.execute("""
+            SELECT user_id, name, email, password, failed_attempts, locked_until 
+            FROM users 
+            WHERE email = ? AND is_active = 1
+        """, (email,))
+        user = cursor.fetchone()
+        
+        # Use timing attack prevention (same response time whether user exists or not)
+        if not user:
+            time.sleep(2)  # Simulate password check time
+            record_failed_login(email)
+            st.error("Invalid email or password")
+            return False
+        
+        # Check if account is locked
+        if user['locked_until']:
+            lock_until = datetime.fromisoformat(user['locked_until'])
+            if lock_until > datetime.now():
+                remaining = (lock_until - datetime.now()).seconds // 60
+                st.error(f"Account temporarily locked. Try again in {remaining} minutes.")
+                return False
+        
+        # Verify password
+        if check_password(password, user['password']):
+            # Successful login - reset all failure tracking
+            cursor.execute("""
+                UPDATE users 
+                SET failed_attempts = 0, 
+                    locked_until = NULL,
+                    last_login = CURRENT_TIMESTAMP
+                WHERE email = ?
+            """, (email,))
+            conn.commit()
+            
+            # Clear rate limiting record
+            if email in FAILED_LOGINS:
+                del FAILED_LOGINS[email]
+            
+            # Set secure session state
+            st.session_state.clear()  # Clear any existing session data
+            st.session_state['user_id'] = user['user_id']
+            st.session_state['name'] = user['name']
+            st.session_state['email'] = user['email']
+            st.session_state['logged_in'] = True
+            st.session_state['login_time'] = datetime.now().isoformat()
+            return True
+        else:
+            # Failed password attempt
+            failed_attempts = user['failed_attempts'] + 1
+            locked_until = None
+            
+            # Lock account after 5 failed attempts
+            if failed_attempts >= 5:
+                locked_until = (datetime.now() + timedelta(minutes=15)).isoformat()
+                st.error("Too many failed attempts. Account locked for 15 minutes.")
+            
+            cursor.execute("""
+                UPDATE users 
+                SET failed_attempts = ?, locked_until = ?
+                WHERE email = ?
+            """, (failed_attempts, locked_until, email))
+            conn.commit()
+            
+            # Track for rate limiting
+            record_failed_login(email)
+            
+            # Generic error message (don't reveal if email exists vs wrong password)
+            st.error("Invalid email or password")
+            return False
+            
+    except Exception as e:
+        # Log the error but show generic message
+        print(f"Login error: {e}")  # In production, use proper logging
+        st.error("An error occurred. Please try again later.")
+        return False
+    finally:
+        conn.close()
+
+def register_user(name: str, email: str, password: str, confirm_password: str) -> tuple[bool, str]:
+    """
+    Secure user registration with comprehensive validation
+    Returns: (success, message)
+    """
+    # Input validation
+    name = name.strip()
+    if not name or len(name) < 2:
+        return False, "Name must be at least 2 characters"
+    
+    if len(name) > 100:
+        return False, "Name is too long (max 100 characters)"
+    
+    email = email.lower().strip()
+    if not validate_email(email):
+        return False, "Please enter a valid email address"
+    
+    if len(email) > 255:
+        return False, "Email is too long"
+    
+    if password != confirm_password:
+        return False, "Passwords do not match"
+    
+    is_valid, password_msg = validate_password_strength(password)
+    if not is_valid:
+        return False, password_msg
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Check if email already exists (but use generic error)
+        cursor.execute("SELECT email FROM users WHERE email = ?", (email,))
+        if cursor.fetchone():
+            return False, "Registration failed. Please try a different email."
+        
+        # Create new user
+        cursor.execute("""
+            INSERT INTO users (name, email, password, failed_attempts, created_at) 
+            VALUES (?, ?, ?, 0, CURRENT_TIMESTAMP)
+        """, (name, email, hash_password(password)))
+        conn.commit()
+        
+        return True, "Registration successful! Please log in."
+        
+    except sqlite3.IntegrityError:
+        # Generic error to prevent email enumeration
+        return False, "Registration failed. Please try a different email."
+    except Exception as e:
+        print(f"Registration error: {e}")  # Log internally
+        return False, "Registration failed. Please try again later."
+    finally:
+        conn.close()
+
+def is_session_valid() -> bool:
+    """Check if current session is still valid (not expired)"""
+    if not st.session_state.get('logged_in', False):
+        return False
+    
+    # Session timeout after 8 hours
+    if 'login_time' in st.session_state:
+        login_time = datetime.fromisoformat(st.session_state['login_time'])
+        if datetime.now() - login_time > timedelta(hours=8):
+            logout()
+            return False
+    
+    return True
+
+def auth_page():
+    """Render authentication page with modern UI"""
+    
+    # Custom CSS for dark theme
+    st.markdown("""
+        <style>
+        .stApp {
+            background-color: #0E1117;
+        }
+        div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column;"] > div[data-testid="stVerticalBlock"] {
+            background-color: #161B22;
+            border: 1px solid #2A2F36;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .stTextInput > div > div > input {
+            background-color: #0E1117;
+            color: #FFFFFF;
+            border: 1px solid #2A2F36;
+        }
+        .stButton > button {
+            width: 100%;
+            background-color: #238636;
+            color: white;
+        }
+        .stButton > button:hover {
+            background-color: #2ea043;
+        }
+        p, div, span, label {
+            color: #A0A0A0 !important;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            color: #FFFFFF !important;
+        }
+        .stAlert {
+            border-radius: 6px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    # Session expiry check
+    if st.session_state.get('logged_in', False) and not is_session_valid():
+        st.warning("Session expired. Please login again.")
+        return
+    
+    tab1, tab2 = st.tabs(["🔐 Login", "📝 Register"])
+    
+    with tab1:
+        st.subheader("Welcome Back")
+        
+        with st.form("login_form"):
+            email = st.text_input("Email", placeholder="you@example.com")
+            password = st.text_input("Password", type="password", placeholder="Enter your password")
+            
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                submit = st.form_submit_button("Log In", use_container_width=True)
+            
+            if submit:
+                if not email or not password:
+                    st.error("Please fill in all fields")
+                else:
+                    if login_user(email, password):
+                        st.rerun()
+    
+    with tab2:
+        st.subheader("Create Account")
+        st.caption("Please use a strong password for security")
+        
+        with st.form("register_form"):
+            name = st.text_input("Full Name", placeholder="John Doe")
+            email = st.text_input("Email", placeholder="you@example.com")
+            password = st.text_input("Password", type="password", placeholder="Create a password")
+            confirm_password = st.text_input("Confirm Password", type="password", placeholder="Confirm your password")
+            
+            # Real-time password strength indicator
+            if password:
+                is_strong, strength_msg = validate_password_strength(password)
+                if is_strong:
+                    st.success(f"✓ {strength_msg}")
+                else:
+                    st.warning(f"⚠️ {strength_msg}")
+            
+            submit = st.form_submit_button("Register", use_container_width=True)
+            
+            if submit:
+                if not all([name, email, password, confirm_password]):
+                    st.error("Please fill in all fields")
+                else:
+                    success, message = register_user(name, email, password, confirm_password)
+                    if success:
+                        st.success(message)
+                        st.info("Please go to the Login tab to continue")
+                    else:
+                        st.error(message)
+
+def logout():
+    """Secure logout with complete session cleanup"""
+    # Clear all session state keys
+    keys_to_remove = ['user_id', 'name', 'email', 'logged_in', 'login_time']
+    for key in keys_to_remove:
+        if key in st.session_state:
+            del st.session_state[key]
+    
+    # Clear any other session data
+    st.session_state.clear()
+    
+    # Show success message and redirect
+    st.success("Logged out successfully!")
+    st.rerun()
