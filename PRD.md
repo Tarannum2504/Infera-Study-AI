@@ -23,9 +23,19 @@
 * No charts, no streak metrics, no active task count to keep the home screen clean.
 
 ### 2.3 Task Manager (`pages/tasks.py`)
-* Add, edit, delete, and track academic tasks.
-* Status tracking (Pending vs. Done).
-* Priority levels and deadlines.
+* **Interactive Inline Progress Sliders**: Each task is represented in a beautiful, custom-styled glassmorphic container rather than a static table. Inside each card, an interactive slider (`st.slider()`) allows users to adjust task progress inline in steps of 5% with real-time database updates.
+* **Automatic Status and Progress State Logic**:
+  * Progress = 0% $\rightarrow$ status auto-updates to `'pending'`.
+  * Progress between 5% and 95% $\rightarrow$ status auto-updates to `'in_progress'`.
+  * Progress = 100% $\rightarrow$ status auto-updates to `'done'`.
+* **Dynamic Color-Coded Progress Fills**: The custom progress bar shifts colors dynamically based on progress:
+  * Red (`#E53935`) for progress $\le 25\%$.
+  * Orange (`#FB8C00`) for progress $\le 50\%$.
+  * Yellow (`#FDD835`) for progress $\le 75\%$.
+  * Muted Grey (`#A0A0A0`) for progress $< 100\%$.
+  * Green (`#43A047`) for progress $= 100\%$.
+* **Glassmorphic Card UI**: Cleanly styled `st.container(border=True)` elements styled as premium liquid glass cards (`div[data-testid="stVerticalBlockBorderWrapper"]`) with transparent dark-glass backgrounds, subtle borders, high blurs, and hover highlight transitions.
+* **Direct Actions**: Custom "Done ✓" (sets progress to 100% and status to `'done'`) and "Delete ×" buttons are pinned side-by-side beneath each inline progress slider inside the card container.
 
 ### 2.4 Infera Flow (`pages/infera_flow.py`)
 * Replaced the standard Pomodoro timer with a custom "Infera Flow" focused study module.
