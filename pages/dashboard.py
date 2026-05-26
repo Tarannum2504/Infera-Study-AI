@@ -141,7 +141,8 @@ cursor.execute("""
 high_priority_tasks = cursor.fetchall()
 
 if high_priority_tasks:
-    high_priority_df = pd.DataFrame([dict(r) for r in high_priority_tasks], columns=['Title', 'Subject', 'Deadline'])
+    high_priority_df = pd.DataFrame([dict(r) for r in high_priority_tasks])
+    high_priority_df = high_priority_df[['Title', 'Subject', 'Deadline']]
     high_priority_df.columns = ['Task', 'Subject', 'Deadline']
     st.dataframe(high_priority_df, hide_index=True, use_container_width=True)
 else:
@@ -163,7 +164,8 @@ upcoming_tasks = cursor.fetchall()
 conn.close()
 
 if upcoming_tasks:
-    upcoming_df = pd.DataFrame([dict(r) for r in upcoming_tasks], columns=['Title', 'Subject', 'Deadline'])
+    upcoming_df = pd.DataFrame([dict(r) for r in upcoming_tasks])
+    upcoming_df = upcoming_df[['Title', 'Subject', 'Deadline']]
     upcoming_df.columns = ['Task', 'Subject', 'Deadline']
     st.dataframe(upcoming_df, hide_index=True, use_container_width=True)
 else:

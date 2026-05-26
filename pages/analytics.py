@@ -124,20 +124,20 @@ weekly_data = []
 for d in last_7_days:
     day_sessions = [s for s in sessions if pd.to_datetime(s['date']).date() == d] if sessions else []
     day_mins = sum([s['duration_minutes'] for s in day_sessions])
-    weekly_data.append({"Date": d.strftime("%m-%d"), "Hours": round(day_mins / 60, 2)})
+    weekly_data.append({"date": pd.to_datetime(d), "hours": round(day_mins / 60, 2)})
 
 weekly_df = pd.DataFrame(weekly_data).iloc[::-1]
 
-# Weekly hours chart with Inline Axis settings to avoid TypeError
+# Weekly hours chart
 chart1 = alt.Chart(weekly_df).mark_bar(
     color='rgba(255,255,255,0.7)',
     cornerRadiusTopLeft=3,
     cornerRadiusTopRight=3
 ).encode(
-    x=alt.X('Date:N', axis=alt.Axis(labelColor='rgba(255,255,255,0.35)', 
+    x=alt.X('date:T', axis=alt.Axis(labelColor='rgba(255,255,255,0.35)', 
         gridColor='rgba(255,255,255,0.05)', titleColor='rgba(255,255,255,0.35)',
         labelAngle=-30)),
-    y=alt.Y('Hours:Q', axis=alt.Axis(labelColor='rgba(255,255,255,0.35)',
+    y=alt.Y('hours:Q', axis=alt.Axis(labelColor='rgba(255,255,255,0.35)',
         gridColor='rgba(255,255,255,0.05)', titleColor='rgba(255,255,255,0.35)'))
 ).properties(
     height=200,
@@ -151,14 +151,14 @@ with chart_col1:
 
 # Chart 2: Subject Distribution Data
 if sessions:
-    subj_df = df.groupby('subject')['duration_minutes'].sum().reset_index()
-    subj_df['hours'] = round(subj_df['duration_minutes'] / 60, 2)
-    subj_df = subj_df.sort_values(by='hours', ascending=False).head(5)
+    subject_df = df.groupby('subject')['duration_minutes'].sum().reset_index()
+    subject_df['hours'] = round(subject_df['duration_minutes'] / 60, 2)
+    subject_df = subject_df.sort_values(by='hours', ascending=False).head(5)
 else:
-    subj_df = pd.DataFrame(columns=['subject', 'hours'])
+    subject_df = pd.DataFrame(columns=['subject', 'hours'])
 
-# Subject distribution chart with Inline Axis settings to avoid TypeError
-chart2 = alt.Chart(subj_df).mark_bar(
+# Subject distribution chart
+chart2 = alt.Chart(subject_df).mark_bar(
     color='rgba(255,255,255,0.6)',
     cornerRadiusTopLeft=3,
     cornerRadiusTopRight=3

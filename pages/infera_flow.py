@@ -59,38 +59,41 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# FOUR BUTTONS (Start Flow · Pause Flow · Reset Flow · Complete Flow in equal columns)
 col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
-
 with col1:
-    if st.button("Start Flow", key="btn_start_flow", use_container_width=True):
-        st.session_state['running'] = True
-        st.rerun()
-
+    start_clicked = st.button("Start Flow", use_container_width=True)
 with col2:
-    if st.button("Pause Flow", key="btn_pause_flow", use_container_width=True):
-        st.session_state['running'] = False
-        st.rerun()
-
+    pause_clicked = st.button("Pause Flow", use_container_width=True)
 with col3:
-    if st.button("Reset Flow", key="btn_reset_flow", use_container_width=True):
-        st.session_state['running'] = False
-        st.session_state['seconds_left'] = 1500
-        st.rerun()
-
+    reset_clicked = st.button("Reset Flow", use_container_width=True)
 with col4:
-    if st.button("Complete Flow", key="btn_complete_flow", use_container_width=True):
-        st.session_state['running'] = False
-        elapsed_minutes = (1500 - st.session_state['seconds_left']) // 60
-        if elapsed_minutes < 1:
-            elapsed_minutes = 1
-        
-        subj = st.session_state['pomodoro_subject'] or "General"
-        log_session(user_id, date.today(), elapsed_minutes, subj, 'pomodoro')
-        st.success(f"Flow complete! {elapsed_minutes} minutes saved.")
-        st.session_state['seconds_left'] = 1500
-        st.session_state['sessions_today'] += 1
-        st.rerun()
+    complete_clicked = st.button("Complete Flow", use_container_width=True)
+
+if start_clicked:
+    st.session_state['running'] = True
+    st.rerun()
+
+if pause_clicked:
+    st.session_state['running'] = False
+    st.rerun()
+
+if reset_clicked:
+    st.session_state['running'] = False
+    st.session_state['seconds_left'] = 1500
+    st.rerun()
+
+if complete_clicked:
+    st.session_state['running'] = False
+    elapsed_minutes = (1500 - st.session_state['seconds_left']) // 60
+    if elapsed_minutes < 1:
+        elapsed_minutes = 1
+    
+    subj = st.session_state['pomodoro_subject'] or "General"
+    log_session(user_id, date.today(), elapsed_minutes, subj, 'pomodoro')
+    st.success(f"Flow complete! {elapsed_minutes} minutes saved.")
+    st.session_state['seconds_left'] = 1500
+    st.session_state['sessions_today'] += 1
+    st.rerun()
 
 # SESSIONS TODAY COUNTER
 st.markdown(f"""
