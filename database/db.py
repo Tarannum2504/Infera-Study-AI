@@ -361,3 +361,12 @@ def get_profile_stats(user_id):
         'total_sessions': total_sessions,
         'tasks_created': tasks_created
     }
+
+def update_task_progress(task_id, progress, status):
+    conn = get_connection()
+    conn.execute(
+        "UPDATE tasks SET progress=?, status=? WHERE task_id=?",
+        (progress, status, task_id)
+    )
+    conn.commit()
+    conn.close()
