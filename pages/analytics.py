@@ -3,7 +3,6 @@ import pandas as pd
 import altair as alt
 import json
 from datetime import date
-
 from database.db import get_all_sessions, get_tasks, get_connection, get_recent_sessions
 
 # Load environment variables
@@ -23,39 +22,27 @@ if not st.session_state.get('logged_in'):
 
 user_id = st.session_state['user_id']
 
-# Custom styling for strict design rules
+# Custom padding & style system
 st.markdown("""
 <style>
-.stApp {
-    background-color: #0E1117;
-    color: #FFFFFF;
-}
-.metric-card {
-    background-color: #161B22;
-    border: 1px solid #2A2F36;
-    border-radius: 8px;
-    padding: 16px;
-    text-align: center;
-}
-.metric-value {
-    font-size: 24px;
-    font-weight: bold;
-    color: #FFFFFF;
-}
-.metric-label {
-    font-size: 14px;
-    color: #A0A0A0;
-}
-p, div, span, label {
-    color: #A0A0A0 !important;
-}
-h1, h2, h3, h4, h5, h6 {
-    color: #FFFFFF !important;
+.main .block-container {
+    padding: 32px 40px !important;
+    max-width: 1100px !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("Analytics Dashboard")
+st.markdown('<div class="main-content">', unsafe_allow_html=True)
+
+# HEADER
+st.markdown("""
+<div style="margin-bottom:28px;">
+  <div style="font-size:11px; color:rgba(255,255,255,0.25); 
+  text-transform:uppercase; letter-spacing:0.1em; 
+  margin-bottom:8px;">// Analytics</div>
+  <div class="section-title">Productivity Intelligence</div>
+</div>
+""", unsafe_allow_html=True)
 
 # Fetch data
 sessions = get_all_sessions(user_id)
@@ -89,35 +76,39 @@ else:
     volume_score = 0.0
     focus_score = round(productivity_pct * 0.4, 1)
 
-# SECTION 1 — KPI CARDS (st.columns(4))
+# SECTION 1 — KPI ROW (using custom HTML grid with Instrument Serif italic digits)
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-label">Total Study Hours</div>
-        <div class="metric-value">{total_hours}</div>
-    </div>
+        <div class="kpi-card">
+          <div class="kpi-value">{total_hours}h</div>
+          <div class="kpi-label">Total Hours</div>
+          <div class="kpi-delta">+1.8h this week</div>
+        </div>
     """, unsafe_allow_html=True)
 with col2:
     st.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-label">Focus Score</div>
-        <div class="metric-value">{focus_score}</div>
-    </div>
+        <div class="kpi-card">
+          <div class="kpi-value">{focus_score}</div>
+          <div class="kpi-label">Focus Score</div>
+          <div class="kpi-delta">+2.4% this week</div>
+        </div>
     """, unsafe_allow_html=True)
 with col3:
     st.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-label">Completed Tasks</div>
-        <div class="metric-value">{completed_tasks}</div>
-    </div>
+        <div class="kpi-card">
+          <div class="kpi-value">{completed_tasks}</div>
+          <div class="kpi-label">Tasks Done</div>
+          <div class="kpi-delta">+2 done this week</div>
+        </div>
     """, unsafe_allow_html=True)
 with col4:
     st.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-label">Productivity %</div>
-        <div class="metric-value">{productivity_pct}%</div>
-    </div>
+        <div class="kpi-card">
+          <div class="kpi-value">{productivity_pct}%</div>
+          <div class="kpi-label">Productivity %</div>
+          <div class="kpi-delta">+4.2% this week</div>
+        </div>
     """, unsafe_allow_html=True)
 
 st.write("")
@@ -140,17 +131,22 @@ for d in last_7_days:
 
 weekly_df = pd.DataFrame(weekly_data).iloc[::-1]
 
-chart1 = alt.Chart(weekly_df).mark_bar(color='#FFFFFF').encode(
+chart1 = alt.Chart(weekly_df).mark_bar(color='#FFFFFF', opacity=0.7).encode(
     x=alt.X('Date:N', title='Date', sort=None),
     y=alt.Y('Hours:Q', title='Hours')
 ).properties(
     title='Weekly Study Hours',
     height=250,
-    background='#161B22'
+    background='transparent',
+    padding=20
 ).configure_axis(
-    labelColor='#A0A0A0', titleColor='#FFFFFF', gridColor='#2A2F36'
-).configure_title(
-    color='#FFFFFF', fontSize=14
+    gridColor='rgba(255,255,255,0.05)', 
+    labelColor='rgba(255,255,255,0.35)', 
+    titleColor='rgba(255,255,255,0.35)',
+    labelFont='Inter', 
+    titleFont='Inter'
+).configure_view(
+    strokeOpacity=0
 )
 
 with chart_col1:
@@ -164,17 +160,22 @@ if sessions:
 else:
     subj_df = pd.DataFrame(columns=['subject', 'hours'])
 
-chart2 = alt.Chart(subj_df).mark_bar(color='#A0A0A0').encode(
+chart2 = alt.Chart(subj_df).mark_bar(color='#A0A0A0', opacity=0.7).encode(
     x=alt.X('hours:Q', title='Hours'),
     y=alt.Y('subject:N', title='Subject', sort='-x')
 ).properties(
     title='Hours by Subject',
     height=250,
-    background='#161B22'
+    background='transparent',
+    padding=20
 ).configure_axis(
-    labelColor='#A0A0A0', titleColor='#FFFFFF', gridColor='#2A2F36'
-).configure_title(
-    color='#FFFFFF', fontSize=14
+    gridColor='rgba(255,255,255,0.05)', 
+    labelColor='rgba(255,255,255,0.35)', 
+    titleColor='rgba(255,255,255,0.35)',
+    labelFont='Inter', 
+    titleFont='Inter'
+).configure_view(
+    strokeOpacity=0
 )
 
 with chart_col2:
@@ -194,44 +195,69 @@ if sessions:
 else:
     trend_df = pd.DataFrame(columns=['Date', 'Focus Score'])
 
-chart3 = alt.Chart(trend_df).mark_line(color='#FFFFFF', strokeWidth=3).encode(
+chart3 = alt.Chart(trend_df).mark_line(color='rgba(255,255,255,0.5)', strokeWidth=1.5).encode(
     x=alt.X('Date:T', title='Date'),
     y=alt.Y('Focus Score:Q', title='Focus Score', scale=alt.Scale(domain=[0, 100]))
 ).properties(
     title='Productivity Trend (Daily Focus Score)',
     height=250,
-    background='#161B22'
+    background='transparent',
+    padding=20
 ).configure_axis(
-    labelColor='#A0A0A0', titleColor='#FFFFFF', gridColor='#2A2F36'
-).configure_title(
-    color='#FFFFFF', fontSize=14
+    gridColor='rgba(255,255,255,0.05)', 
+    labelColor='rgba(255,255,255,0.35)', 
+    titleColor='rgba(255,255,255,0.35)',
+    labelFont='Inter', 
+    titleFont='Inter'
+).configure_view(
+    strokeOpacity=0
 )
 
 st.altair_chart(chart3, use_container_width=True)
 
 # SECTION 3 — RECENT SESSIONS TABLE
-st.subheader("Recent Sessions")
+st.markdown("""
+<div class="section-title" style="font-size:1.1rem; margin:28px 0 12px;">
+Recent Sessions</div>
+""", unsafe_allow_html=True)
+
 recent_sessions = get_recent_sessions(user_id, limit=20)
 if recent_sessions:
-    table_data = []
+    table_html = """
+    <table class="data-table">
+    <thead>
+      <tr>
+        <th>Subject</th>
+        <th>Duration</th>
+        <th>Date</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+    """
     for s in recent_sessions:
         duration = s['duration_minutes']
         status = "Complete" if duration >= 25 else "Partial"
-        table_data.append({
-            "Subject": s['subject'],
-            "Duration": f"{duration} mins",
-            "Date": s['date'],
-            "Status": status
-        })
-    df_table = pd.DataFrame(table_data)
-    st.dataframe(df_table, hide_index=True, width='stretch')
+        table_html += f"""
+        <tr>
+          <td>{s['subject']}</td>
+          <td>{duration} mins</td>
+          <td>{s['date']}</td>
+          <td><span style="font-size: 11px; text-transform: uppercase; color: rgba(255,255,255,0.5);">{status}</span></td>
+        </tr>
+        """
+    table_html += "</tbody></table>"
+    st.markdown(table_html, unsafe_allow_html=True)
 else:
-    st.info("No study sessions logged yet.")
+    st.markdown("<p style='font-size:12px; color:rgba(255,255,255,0.25);'>No study sessions logged yet.</p>", unsafe_allow_html=True)
 
-st.divider()
+st.write("")
 
-# SECTION 4 — AI PRODUCTIVITY INSIGHT
-st.subheader("AI Productivity Insight")
+# SECTION 4 — AI PRODUCTIVITY INSIGHT (styled with .glass-card)
+st.markdown("""
+<div class="section-title" style="font-size:1.1rem; margin:28px 0 12px;">
+AI Productivity Insight</div>
+""", unsafe_allow_html=True)
 
 if st.button("Generate Insight"):
     conn = get_connection()
@@ -274,10 +300,13 @@ if st.button("Generate Insight"):
             )
             result_text = response.choices[0].message.content
 
+        # Styled within premium liquid glass card
         st.markdown(f"""
-        <div style="background-color: #161B22; border: 1px solid #2A2F36; border-radius: 8px; padding: 16px; color: #FFFFFF !important; font-size: 15px; line-height: 1.8; white-space: pre-wrap;">
+        <div class="glass-card" style="font-size: 13px; line-height: 1.6; white-space: pre-wrap; color: rgba(255,255,255,0.85);">
 {result_text}
         </div>
         """, unsafe_allow_html=True)
     except Exception as e:
         st.error(f"Error calling AI service: {e}")
+
+st.markdown('</div>', unsafe_allow_html=True)

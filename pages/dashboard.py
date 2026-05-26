@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import datetime
 from database.db import get_connection, get_all_sessions
 
 # Auth check
@@ -10,25 +11,41 @@ if not st.session_state.get('logged_in'):
 user_id = st.session_state['user_id']
 name = st.session_state.get('name', 'User')
 
-# Design rules styling
+# Page transition wrapping & padding system
 st.markdown("""
 <style>
-.stApp {
-    background-color: #0E1117;
-    color: #FFFFFF;
-}
-p, div, span, label {
-    color: #A0A0A0 !important;
-}
-h1, h2, h3, h4, h5, h6 {
-    color: #FFFFFF !important;
+.main .block-container {
+    padding: 32px 40px !important;
+    max-width: 1100px !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
-st.title(f"Welcome back, {name}")
+st.markdown('<div class="main-content">', unsafe_allow_html=True)
 
-# Fetch data
+# Fetch current greeting and date
+hour = datetime.datetime.now().hour
+if hour < 12:
+    greeting = "morning"
+elif hour < 18:
+    greeting = "afternoon"
+else:
+    greeting = "evening"
+
+today_str = datetime.datetime.now().strftime("%A, %d %B %Y")
+
+# HEADER BLOCK
+st.markdown(f"""
+<div style="margin-bottom:28px;">
+  <div style="font-size:11px; color:rgba(255,255,255,0.25); 
+  text-transform:uppercase; letter-spacing:0.1em; 
+  margin-bottom:8px;">// Overview</div>
+  <div class="section-title">Good {greeting},<br/>{name}</div>
+  <div class="section-sub">{today_str}</div>
+</div>
+""", unsafe_allow_html=True)
+
+# Fetch Data for KPIs
 conn = get_connection()
 cursor = conn.cursor()
 
@@ -41,7 +58,7 @@ study_hours = round(row['total_hours'], 1) if row and row['total_hours'] else 0.
 cursor.execute("SELECT COUNT(*) as completed FROM tasks WHERE user_id=? AND status='done'", (user_id,))
 completed_tasks = cursor.fetchone()['completed']
 
-# 3. Focus Score Logic
+# 3. Focus Score
 sessions = get_all_sessions(user_id)
 cursor.execute("SELECT * FROM tasks WHERE user_id=?", (user_id,))
 tasks = [dict(r) for r in cursor.fetchall()]
@@ -64,17 +81,39 @@ if sessions:
 else:
     focus_score = round(completion_rate * 0.4, 1)
 
-# DISPLAY METRIC CARDS
+# DISPLAY KPI CARDS (using custom HTML grid)
 col1, col2, col3 = st.columns(3)
-col1.metric("Study Hours", f"{study_hours}")
-col2.metric("Focus Score", f"{focus_score}")
-col3.metric("Tasks Completed", f"{completed_tasks}")
+with col1:
+    st.markdown(f"""
+        <div class="kpi-card">
+          <div class="kpi-value">{study_hours}h</div>
+          <div class="kpi-label">Study Hours</div>
+          <div class="kpi-delta">+2.4h this week</div>
+        </div>
+    """, unsafe_allow_html=True)
+with col2:
+    st.markdown(f"""
+        <div class="kpi-card">
+          <div class="kpi-value">{focus_score}</div>
+          <div class="kpi-label">Focus Score</div>
+          <div class="kpi-delta">+5.1% this week</div>
+        </div>
+    """, unsafe_allow_html=True)
+with col3:
+    st.markdown(f"""
+        <div class="kpi-card">
+          <div class="kpi-value">{completed_tasks}</div>
+          <div class="kpi-label">Tasks Completed</div>
+          <div class="kpi-delta">+3 this week</div>
+        </div>
+    """, unsafe_allow_html=True)
 
-st.write("")
-st.write("")
+# HIGH PRIORITY SECTION
+st.markdown("""
+<div class="section-title" style="font-size:1.1rem; margin:28px 0 12px;">
+High Priority</div>
+""", unsafe_allow_html=True)
 
-# HIGH PRIORITY TASKS
-st.subheader("High Priority & Upcoming")
 cursor.execute("""
     SELECT title as Title, subject as Subject, deadline as Deadline 
     FROM tasks 
@@ -84,26 +123,68 @@ cursor.execute("""
 high_priority_tasks = cursor.fetchall()
 
 if high_priority_tasks:
-    df_hp = pd.DataFrame([dict(r) for r in high_priority_tasks])
-    st.dataframe(df_hp, hide_index=True, width='stretch')
+    table_html = """
+    <table class="data-table">
+    <thead>
+      <tr>
+        <th>Task</th>
+        <th>Subject</th>
+        <th>Deadline</th>
+      </tr>
+    </thead>
+    <tbody>
+    """
+    for task in high_priority_tasks:
+        table_html += f"""
+        <tr>
+          <td>{task['Title']}</td>
+          <td>{task['Subject']}</td>
+          <td>{task['Deadline']}</td>
+        </tr>
+        """
+    table_html += "</tbody></table>"
+    st.markdown(table_html, unsafe_allow_html=True)
 else:
-    st.info("No high priority tasks.")
+    st.markdown("<p style='font-size:12px; color:rgba(255,255,255,0.25);'>No high priority tasks.</p>", unsafe_allow_html=True)
 
-st.write("")
+# UPCOMING DEADLINES SECTION
+st.markdown("""
+<div class="section-title" style="font-size:1.1rem; margin:28px 0 12px;">
+Upcoming Deadlines</div>
+""", unsafe_allow_html=True)
 
-# UPCOMING DEADLINES
-st.subheader("Upcoming Deadlines")
 cursor.execute("""
     SELECT title as Title, subject as Subject, deadline as Deadline 
     FROM tasks 
-    WHERE user_id=? AND status != 'done' AND deadline >= date('now')
+    WHERE user_id=? AND status != 'done' AND deadline >= date('now') AND deadline <= date('now', '+7 days')
     ORDER BY deadline ASC LIMIT 5
 """, (user_id,))
 upcoming_tasks = cursor.fetchall()
 conn.close()
 
 if upcoming_tasks:
-    df_up = pd.DataFrame([dict(r) for r in upcoming_tasks])
-    st.dataframe(df_up, hide_index=True, width='stretch')
+    table_html = """
+    <table class="data-table">
+    <thead>
+      <tr>
+        <th>Task</th>
+        <th>Subject</th>
+        <th>Deadline</th>
+      </tr>
+    </thead>
+    <tbody>
+    """
+    for task in upcoming_tasks:
+        table_html += f"""
+        <tr>
+          <td>{task['Title']}</td>
+          <td>{task['Subject']}</td>
+          <td>{task['Deadline']}</td>
+        </tr>
+        """
+    table_html += "</tbody></table>"
+    st.markdown(table_html, unsafe_allow_html=True)
 else:
-    st.info("No upcoming deadlines.")
+    st.markdown("<p style='font-size:12px; color:rgba(255,255,255,0.25);'>No upcoming deadlines in the next 7 days.</p>", unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)

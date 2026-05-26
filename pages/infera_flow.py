@@ -10,23 +10,23 @@ if not st.session_state.get('logged_in'):
 
 user_id = st.session_state['user_id']
 
-# Custom styling for strict design rules
+# Custom padding & style system
 st.markdown("""
 <style>
-.stApp {
-    background-color: #0E1117;
-    color: #FFFFFF;
+.main .block-container {
+    padding: 32px 40px !important;
+    max-width: 1100px !important;
 }
-p, div, span, label {
-    color: #A0A0A0 !important;
+.brighter-border-btn button {
+    border: 1px solid rgba(255,255,255,0.3) !important;
 }
-h1, h2, h3, h4, h5, h6 {
-    color: #FFFFFF !important;
+.brighter-border-btn button:hover {
+    border-color: rgba(255,255,255,0.5) !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("Infera Flow")
+st.markdown('<div class="main-content">', unsafe_allow_html=True)
 
 # Session State Initialization
 if 'seconds_left' not in st.session_state:
@@ -38,39 +38,58 @@ if 'sessions_today' not in st.session_state:
 if 'pomodoro_subject' not in st.session_state:
     st.session_state['pomodoro_subject'] = ""
 
-# Subject Input at top
-subject = st.text_input("What are you studying?", value=st.session_state['pomodoro_subject'], key="subject_input")
+# HEADER
+st.markdown("""
+<div style="margin-bottom:28px;">
+  <div style="font-size:11px; color:rgba(255,255,255,0.25); 
+  text-transform:uppercase; letter-spacing:0.1em; 
+  margin-bottom:8px;">// Focus</div>
+  <div class="section-title">Infera Flow</div>
+  <div class="section-sub">Deep work, tracked.</div>
+</div>
+""", unsafe_allow_html=True)
+
+# SUBJECT INPUT (above timer)
+subject = st.text_input("What are you working on?", value=st.session_state['pomodoro_subject'], placeholder="What are you working on?", key="subject_input")
 st.session_state['pomodoro_subject'] = subject
 
-# Timer Display (centered, large white monospace text)
+# TIMER DISPLAY (centered, large)
 mins, secs = divmod(st.session_state['seconds_left'], 60)
 timer_text = f"{mins:02d}:{secs:02d}"
-st.markdown(f'<div style="font-size: 80px; font-weight: bold; color: #FFFFFF; text-align: center; margin: 20px 0; font-family: monospace;">{timer_text}</div>', unsafe_allow_html=True)
 
-# Sessions completed today below the timer
-st.markdown(f"<div style='text-align: center; color: #A0A0A0; font-size: 16px; font-family: Inter, sans-serif; margin-bottom: 20px;'>Sessions completed today: {st.session_state['sessions_today']}</div>", unsafe_allow_html=True)
+st.markdown(f"""
+<div style="text-align:center; padding:48px 0;">
+  <div style="font-family:'Instrument Serif',serif; font-style:italic;
+  font-size:6rem; color:#FFFFFF; letter-spacing:-4px; line-height:1;">
+  {timer_text}</div>
+  <div style="font-size:11px; color:rgba(255,255,255,0.25); 
+  text-transform:uppercase; letter-spacing:0.15em; margin-top:12px;">
+  25 minute focus session</div>
+</div>
+""", unsafe_allow_html=True)
 
-# Four buttons in a row
+# FOUR BUTTONS (Start Flow · Pause Flow · Reset Flow · Complete Flow)
 c1, c2, c3, c4 = st.columns(4)
 
 with c1:
-    if st.button("Start Flow", use_container_width=True):
+    if st.button("Start Flow", key="btn_start_flow", use_container_width=True):
         st.session_state['running'] = True
         st.rerun()
 
 with c2:
-    if st.button("Pause Flow", use_container_width=True):
+    if st.button("Pause Flow", key="btn_pause_flow", use_container_width=True):
         st.session_state['running'] = False
         st.rerun()
 
 with c3:
-    if st.button("Reset Flow", use_container_width=True):
+    if st.button("Reset Flow", key="btn_reset_flow", use_container_width=True):
         st.session_state['running'] = False
         st.session_state['seconds_left'] = 1500
         st.rerun()
 
 with c4:
-    if st.button("Complete Flow", use_container_width=True):
+    st.markdown("<div class='brighter-border-btn'>", unsafe_allow_html=True)
+    if st.button("Complete Flow", key="btn_complete_flow", use_container_width=True):
         st.session_state['running'] = False
         elapsed_minutes = (1500 - st.session_state['seconds_left']) // 60
         if elapsed_minutes < 1:
@@ -82,8 +101,16 @@ with c4:
         st.session_state['seconds_left'] = 1500
         st.session_state['sessions_today'] += 1
         st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
 
-# Timer Logic loop
+# SESSIONS TODAY COUNTER
+st.markdown(f"""
+<div style="text-align:center; margin-top:20px; font-size:12px; 
+color:rgba(255,255,255,0.25);">
+{st.session_state['sessions_today']} sessions completed today</div>
+""", unsafe_allow_html=True)
+
+# Timer loop logic
 if st.session_state['running'] and st.session_state['seconds_left'] > 0:
     time.sleep(1)
     st.session_state['seconds_left'] -= 1
@@ -92,3 +119,5 @@ elif st.session_state['running'] and st.session_state['seconds_left'] <= 0:
     st.session_state['running'] = False
     st.success("Time's up! Click 'Complete Flow' to log your session.")
     st.rerun()
+
+st.markdown('</div>', unsafe_allow_html=True)

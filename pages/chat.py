@@ -1,5 +1,4 @@
 import streamlit as st
-
 from database.db import save_chat
 
 # Auth check
@@ -19,24 +18,35 @@ client = InferenceClient(
     api_key=os.getenv("HF_API_KEY")
 )
 
-# Initialize chat history state
-if 'chat_messages' not in st.session_state:
-    st.session_state['chat_messages'] = []
-
-# Styling
+# Custom padding & style system
 st.markdown("""
 <style>
-.stApp {
-    background-color: #0E1117;
+.main .block-container {
+    padding: 32px 40px !important;
+    max-width: 1100px !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# Layout
-col1, col2 = st.columns([0.85, 0.15])
-with col1:
-    st.title("AI Study Assistant")
-with col2:
+st.markdown('<div class="main-content">', unsafe_allow_html=True)
+
+# Initialize states
+if 'chat_messages' not in st.session_state:
+    st.session_state['chat_messages'] = []
+if 'token_stats' not in st.session_state:
+    st.session_state['token_stats'] = {"total_input": 0, "total_output": 0, "calls": 0}
+
+# HEADER (compact)
+c_header, c_clear = st.columns([0.8, 0.2])
+with c_header:
+    st.markdown("""
+        <div style="display:flex; align-items:baseline; gap:12px; margin-bottom:20px;">
+          <div class="section-title" style="font-size:1.3rem;">AI Assistant</div>
+          <div style="font-size:11px; color:rgba(255,255,255,0.25);">
+          Infera Study Mentor</div>
+        </div>
+    """, unsafe_allow_html=True)
+with c_clear:
     if st.button("Clear Chat"):
         st.session_state['chat_messages'] = []
         st.rerun()
@@ -45,31 +55,61 @@ with col2:
 for msg in st.session_state['chat_messages']:
     if msg["role"] == "user":
         st.markdown(f"""
-        <div style="background-color: #1E2A3A; color: white; border-radius: 12px; padding: 10px 14px; max-width: 75%; margin-left: auto; margin-bottom: 10px; white-space: pre-wrap;">
-{msg["content"]}
+        <div class="msg-user">
+          <div class="msg-user-inner">{msg["content"]}</div>
         </div>
         """, unsafe_allow_html=True)
     else:
         st.markdown(f"""
-        <div style="background-color: #161B22; color: white; border: 1px solid #2A2F36; border-radius: 12px; padding: 10px 14px; max-width: 75%; margin-bottom: 10px; white-space: pre-wrap;">
-{msg["content"]}
+        <div class="msg-ai">
+          <div class="msg-ai-inner">{msg["content"]}</div>
         </div>
         """, unsafe_allow_html=True)
+        
+        # Display token badge if stats are stored in the message dict
+        if "prompt_tokens" in msg:
+            in_tok = msg["prompt_tokens"]
+            out_tok = msg["completion_tokens"]
+            total_tok = in_tok + out_tok
+            session_total_tok = st.session_state['token_stats']['total_input'] + st.session_state['token_stats']['total_output']
+            
+            st.markdown(f"""
+                <div class="token-badge">
+                  <span>Tokens used</span> {in_tok} in · {out_tok} out
+                  · <span>Total</span> {total_tok} · <span>Session</span> {session_total_tok}
+                </div>
+            """, unsafe_allow_html=True)
 
-# Chat input
+# Session Summary Line above the input
+calls_count = st.session_state['token_stats']['calls']
+total_tokens_used = st.session_state['token_stats']['total_input'] + st.session_state['token_stats']['total_output']
+
+st.markdown(f"""
+<div style="text-align:center; font-size:11px; 
+color:rgba(255,255,255,0.2); padding:8px 0;">
+Session · {calls_count} calls · {total_tokens_used} tokens used</div>
+""", unsafe_allow_html=True)
+
+# Chat Input
 user_input = st.chat_input("Ask your study mentor...")
 
 if user_input:
     # 1. Append user message
     st.session_state['chat_messages'].append({"role": "user", "content": user_input})
     
-    # 2. Build full prompt for API
-    messages = [{"role": "system", "content": "You are Infera, a dedicated academic study mentor. Help students plan studies, understand concepts and stay motivated. Be concise and practical. Plain text only."}]
-    for msg in st.session_state['chat_messages'][-10:]:
-        messages.append({"role": msg['role'], "content": msg['content']})
+    # 2. Build full prompt for API, trimmed to last 8 messages for token optimization
+    system_prompt = (
+        "You are Infera, a dedicated academic study mentor. "
+        "Help students plan studies, understand concepts and stay motivated. "
+        "Be concise. Maximum 3 sentences unless detail is explicitly requested. Plain text only."
+    )
+    messages = [{"role": "system", "content": system_prompt}]
     
+    for msg in st.session_state['chat_messages'][-8:]:
+        messages.append({"role": msg['role'], "content": msg['content']})
+        
     try:
-        # 3. Call Gemini API
+        # 3. Call HF Inference Client
         response = client.chat.completions.create(
             model="meta-llama/llama-3.1-8b-instruct",
             max_tokens=1000,
@@ -77,14 +117,32 @@ if user_input:
         )
         result_text = response.choices[0].message.content
         
-        # 4. Append assistant message
-        st.session_state['chat_messages'].append({"role": "assistant", "content": result_text})
+        # 4. Extract token counts safely
+        prompt_tokens = 0
+        completion_tokens = 0
+        if hasattr(response, 'usage') and response.usage:
+            prompt_tokens = getattr(response.usage, 'prompt_tokens', 0)
+            completion_tokens = getattr(response.usage, 'completion_tokens', 0)
+            
+        # Update session token totals
+        st.session_state['token_stats']['total_input'] += prompt_tokens
+        st.session_state['token_stats']['total_output'] += completion_tokens
+        st.session_state['token_stats']['calls'] += 1
         
-        # 5. Save to DB
+        # 5. Append assistant message with token info
+        st.session_state['chat_messages'].append({
+            "role": "assistant",
+            "content": result_text,
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens
+        })
+        
+        # Save chat to Database
         save_chat(user_id, user_input, result_text)
         
     except Exception as e:
         st.error(f"Error calling AI service: {e}")
         
-    # 6. st.rerun()
     st.rerun()
+
+st.markdown('</div>', unsafe_allow_html=True)

@@ -1,5 +1,4 @@
 import streamlit as st
-
 from database.db import add_ai_plan
 
 # Auth check
@@ -19,19 +18,39 @@ client = InferenceClient(
     api_key=os.getenv("HF_API_KEY")
 )
 
-st.markdown('<div class="dash-header">AI Study Planner</div>', unsafe_allow_html=True)
+# Custom padding system
+st.markdown("""
+<style>
+.main .block-container {
+    padding: 32px 40px !important;
+    max-width: 1100px !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
-# Input field
-syllabus = st.text_area("Paste your syllabus or topics here", height=200, key="syllabus_input")
+st.markdown('<div class="main-content">', unsafe_allow_html=True)
 
-# Numeric inputs in columns
+# HEADER
+st.markdown("""
+<div style="margin-bottom:28px;">
+  <div style="font-size:11px; color:rgba(255,255,255,0.25); 
+  text-transform:uppercase; letter-spacing:0.1em; 
+  margin-bottom:8px;">// Planner</div>
+  <div class="section-title">Study Plan Generator</div>
+</div>
+""", unsafe_allow_html=True)
+
+# INPUT AREA
+syllabus = st.text_area("Paste your syllabus or topics here", height=200, key="syllabus_input", placeholder="Enter syllabus details or specific topics...")
+
 col1, col2 = st.columns(2)
 with col1:
     study_days = st.number_input("Study days available", min_value=1, max_value=90, value=7)
 with col2:
     hours_per_day = st.number_input("Hours per day", min_value=1, max_value=12, value=3)
 
-# Button to trigger plan generation
+st.write("")
+
 if st.button("Generate Study Plan"):
     if not syllabus.strip():
         st.error("Please enter your syllabus or topics.")
@@ -51,7 +70,6 @@ if st.button("Generate Study Plan"):
         
         try:
             with st.spinner("Generating your study plan..."):
-                full_prompt = f"{system_prompt}\n\n{user_message}"
                 response = client.chat.completions.create(
                     model="meta-llama/llama-3.1-8b-instruct",
                     max_tokens=1000,
@@ -62,21 +80,18 @@ if st.button("Generate Study Plan"):
                 )
                 result_text = response.choices[0].message.content
 
-            # Display plan inside a styled container
-            is_light_mode = st.session_state.get('app_theme') == "Light Mode"
-            bg_color = "#FFFFFF" if is_light_mode else "#1F1F1F"
-            border_color = "#F0DCD3" if is_light_mode else "#2C2C2C"
-            text_color = "#2C1A1D" if is_light_mode else "#FFFFFF"
-
+            # Display plan inside a styled glass container
             st.markdown(f"""
-            <div style="background-color: {bg_color}; border: 1px solid {border_color}; border-radius: 12px; padding: 20px; color: {text_color}; white-space: pre-wrap; font-family: 'Inter', sans-serif;">
+            <div class="glass-card" style="font-size: 13px; line-height: 1.6; white-space: pre-wrap; color: rgba(255,255,255,0.85); margin-top: 16px;">
 {result_text}
             </div>
             """, unsafe_allow_html=True)
             
             # Save to database
             add_ai_plan(user_id, syllabus, result_text)
-            st.success("Plan saved!")
+            st.success("Plan saved successfully!")
             
         except Exception as e:
             st.error(f"Error calling AI service: {e}")
+
+st.markdown('</div>', unsafe_allow_html=True)

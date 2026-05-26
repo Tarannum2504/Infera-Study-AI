@@ -9,21 +9,21 @@ if not st.session_state.get('logged_in'):
 
 user_id = st.session_state['user_id']
 
-# Custom CSS matching design rules
+# Custom CSS matching design rules and block padding
 st.markdown("""
     <style>
-    .stApp {
-        background-color: #0E1117;
-        color: #FFFFFF;
+    .main .block-container {
+        padding: 32px 40px !important;
+        max-width: 1100px !important;
     }
     div[data-testid="stForm"] {
         background-color: #161B22 !important;
-        border: 1px solid #2A2F36 !important;
+        border: 1px solid rgba(255,255,255,0.08) !important;
         border-radius: 8px !important;
         padding: 20px !important;
     }
     p, label, span, div {
-        color: #A0A0A0 !important;
+        color: rgba(255,255,255,0.4) !important;
     }
     h1, h2, h3, h4, h5, h6, strong, b {
         color: #FFFFFF !important;
@@ -31,9 +31,18 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+st.markdown('<div class="main-content">', unsafe_allow_html=True)
+
 # PAGE TITLE & SUBTITLE
-st.title("Profile Settings")
-st.markdown("<p style='color: #A0A0A0; font-size: 16px; margin-top: -10px; margin-bottom: 20px;'>Manage your account details</p>", unsafe_allow_html=True)
+st.markdown("""
+<div style="margin-bottom:28px;">
+  <div style="font-size:11px; color:rgba(255,255,255,0.25); 
+  text-transform:uppercase; letter-spacing:0.1em; 
+  margin-bottom:8px;">// Profile</div>
+  <div class="section-title">Profile Settings</div>
+  <div class="section-sub">Manage your account details</div>
+</div>
+""", unsafe_allow_html=True)
 
 # SECTION 1 — ACCOUNT DETAILS
 st.subheader("Account Information")
@@ -103,3 +112,5 @@ with col2:
     st.metric("Total Sessions", stats.get('total_sessions', 0))
 with col3:
     st.metric("Tasks Created", stats.get('tasks_created', 0))
+
+st.markdown('</div>', unsafe_allow_html=True)
