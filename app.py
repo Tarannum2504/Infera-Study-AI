@@ -2,6 +2,13 @@ import streamlit as st
 from database.db import init_db
 from components.auth import auth_page, logout, is_session_valid
 
+# Force sidebar to start expanded
+st.set_page_config(
+    page_title="Infera Study AI",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 def main():
     init_db()
 
@@ -80,35 +87,56 @@ def main():
             backdrop-filter: blur(20px) !important;
         }
 
-        /* Sidebar open/close animation and toggle button fix */
-        [data-testid="stSidebar"] {
-            transition: transform 0.25s ease, width 0.25s ease !important;
-        }
-
-        /* Restore sidebar collapse button */
-        [data-testid="collapsedControl"] {
+        /* Force sidebar toggle button to always show */
+        [data-testid="collapsedControl"],
+        [data-testid="stSidebarCollapsedControl"] {
             display: flex !important;
             visibility: visible !important;
             opacity: 1 !important;
+            pointer-events: all !important;
+            z-index: 99999 !important;
             position: fixed !important;
-            top: 50% !important;
-            left: 0 !important;
-            z-index: 9999 !important;
-            background: rgba(8,10,16,0.95) !important;
+            top: 16px !important;
+            left: 16px !important;
+            background: rgba(13,15,20,0.9) !important;
             border: 1px solid rgba(255,255,255,0.1) !important;
-            border-left: none !important;
-            border-radius: 0 6px 6px 0 !important;
-            padding: 8px 6px !important;
-            cursor: pointer !important;
+            border-radius: 8px !important;
+            padding: 6px !important;
             backdrop-filter: blur(10px) !important;
+            cursor: pointer !important;
         }
-        [data-testid="collapsedControl"]:hover {
+        [data-testid="collapsedControl"]:hover,
+        [data-testid="stSidebarCollapsedControl"]:hover {
             background: rgba(255,255,255,0.08) !important;
-            border-color: rgba(255,255,255,0.15) !important;
+            border-color: rgba(255,255,255,0.2) !important;
         }
-        [data-testid="collapsedControl"] svg {
-            color: rgba(255,255,255,0.5) !important;
-            fill: rgba(255,255,255,0.5) !important;
+        [data-testid="collapsedControl"] svg,
+        [data-testid="stSidebarCollapsedControl"] svg {
+            fill: rgba(255,255,255,0.6) !important;
+            color: rgba(255,255,255,0.6) !important;
+            width: 18px !important;
+            height: 18px !important;
+        }
+
+        /* Sidebar open state — make sure it's visible */
+        [data-testid="stSidebar"][aria-expanded="true"] {
+            display: block !important;
+            visibility: visible !important;
+            transform: translateX(0) !important;
+            width: 288px !important;
+        }
+
+        /* Sidebar collapsed state */
+        [data-testid="stSidebar"][aria-expanded="false"] {
+            transform: translateX(-288px) !important;
+            width: 288px !important;
+        }
+
+        /* Main content shifts when sidebar opens */
+        [data-testid="stSidebar"][aria-expanded="true"] ~ 
+        .main .block-container {
+            margin-left: 288px !important;
+            transition: margin-left 0.25s ease !important;
         }
 
         /* Nav button hover glow effect */
@@ -136,7 +164,7 @@ def main():
         }
 
         /* ── Hide Streamlit chrome ── */
-        #MainMenu, footer, header { visibility: hidden !important; }
+        #MainMenu, footer { visibility: hidden !important; }
         [data-testid="stToolbar"] { display: none !important; }
         .stDeployButton { display: none !important; }
 

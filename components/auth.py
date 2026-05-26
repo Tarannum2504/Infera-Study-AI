@@ -418,23 +418,28 @@ def auth_page():
         .stTabs [data-baseweb="tab-border"] {
             display: none !important;
         }
-        /* Make Sign In button white */
-        .stForm [data-testid="stFormSubmitButton"] button {
-            background: #FFFFFF !important;
-            color: #000000 !important;
-            border: none !important;
+        /* Auth form submit buttons - dark button, white text */
+        .stForm [data-testid="stFormSubmitButton"] button,
+        .stForm button[kind="primaryFormSubmit"],
+        div[data-testid="stForm"] .stButton button {
+            background: rgba(255,255,255,0.1) !important;
+            color: #FFFFFF !important;
+            border: 1px solid rgba(255,255,255,0.2) !important;
             font-weight: 600 !important;
             font-size: 14px !important;
             padding: 12px !important;
             border-radius: 8px !important;
             letter-spacing: 0.02em !important;
             margin-top: 8px !important;
+            width: 100% !important;
             transition: all 0.15s ease !important;
         }
+        div[data-testid="stForm"] .stButton button:hover,
         .stForm [data-testid="stFormSubmitButton"] button:hover {
-            background: rgba(255,255,255,0.9) !important;
+            background: rgba(255,255,255,0.18) !important;
+            border-color: rgba(255,255,255,0.35) !important;
             transform: translateY(-1px) !important;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4) !important;
         }
         </style>
         """, unsafe_allow_html=True)
