@@ -70,8 +70,11 @@ with col4:
     complete_clicked = st.button("Complete Flow", use_container_width=True)
 
 if start_clicked:
-    st.session_state['running'] = True
-    st.rerun()
+    if not st.session_state['pomodoro_subject'].strip():
+        st.error("Please enter what you are working on before starting the flow.")
+    else:
+        st.session_state['running'] = True
+        st.rerun()
 
 if pause_clicked:
     st.session_state['running'] = False
