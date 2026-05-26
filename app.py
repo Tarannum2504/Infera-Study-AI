@@ -139,9 +139,13 @@ def main():
             padding-left: 18px !important;
         }
 
+        /* Hide default Streamlit sidebar navigation links */
+        [data-testid="stSidebarNav"] {
+            display: none !important;
+        }
+
         /* ── Hide Streamlit chrome ── */
-        #MainMenu, footer { visibility: hidden !important; }
-        [data-testid="stToolbar"] { display: none !important; }
+        footer { visibility: hidden !important; }
         .stDeployButton { display: none !important; }
 
         /* ── Scrollbar ── */
@@ -455,7 +459,7 @@ def main():
                 st.Page("pages/chat.py", title="AI Assistant"),
                 st.Page("pages/profile.py", title="Profile"),
             ]
-            pg = st.navigation(pages_list, position="hidden")
+            pg = st.navigation(pages_list, position="sidebar")
 
             # Route mapping to resolve st.switch_page paths
             page_paths = {
