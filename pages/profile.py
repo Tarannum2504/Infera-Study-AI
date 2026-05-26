@@ -36,9 +36,6 @@ st.markdown('<div class="main-content">', unsafe_allow_html=True)
 # PAGE TITLE & SUBTITLE
 st.markdown("""
 <div style="margin-bottom:28px;">
-  <div style="font-size:11px; color:rgba(255,255,255,0.25); 
-  text-transform:uppercase; letter-spacing:0.1em; 
-  margin-bottom:8px;">// Profile</div>
   <div class="section-title">Profile Settings</div>
   <div class="section-sub">Manage your account details</div>
 </div>

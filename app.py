@@ -5,7 +5,7 @@ from components.auth import auth_page, logout, is_session_valid
 def main():
     init_db()
 
-    # Global CSS injection
+    # Global CSS injection featuring Animated Subtle Grain Overlay and Glowing Orbs
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap');
@@ -14,9 +14,42 @@ def main():
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         .stApp {
-            background-color: #080A0F !important;
+            background: #080A0F !important;
+            background-image: 
+                radial-gradient(ellipse 80% 50% at 20% 10%, 
+                    rgba(255,255,255,0.03) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 80%, 
+                    rgba(255,255,255,0.02) 0%, transparent 50%) !important;
+            background-attachment: fixed !important;
             font-family: 'Inter', sans-serif !important;
             color: #FFFFFF !important;
+        }
+
+        /* Animated subtle grain overlay */
+        .stApp::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.4;
+        }
+
+        /* Glowing orbs for dynamic feel */
+        .stApp::after {
+            content: '';
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, 
+                rgba(255,255,255,0.015) 0%, 
+                transparent 70%);
+            top: -200px;
+            right: -200px;
+            pointer-events: none;
+            z-index: 0;
         }
 
         /* ── Hide Streamlit chrome ── */
@@ -90,93 +123,6 @@ def main():
             font-size: 11px;
             color: rgba(255,255,255,0.3);
             margin-top: 4px;
-        }
-
-        /* ── Navigation items ── */
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 9px 16px;
-            margin: 1px 8px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 400;
-            color: rgba(255,255,255,0.45);
-            transition: all 0.15s ease;
-            text-decoration: none;
-            border: none;
-            background: transparent;
-            width: calc(100% - 16px);
-            text-align: left;
-        }
-        .nav-item:hover {
-            background: rgba(255,255,255,0.05);
-            color: rgba(255,255,255,0.85);
-        }
-        .nav-item.active {
-            background: rgba(255,255,255,0.07);
-            color: #FFFFFF;
-            font-weight: 500;
-        }
-        .nav-dot {
-            width: 5px; height: 5px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.25);
-            flex-shrink: 0;
-        }
-        .nav-item.active .nav-dot {
-            background: #FFFFFF;
-        }
-
-        /* ── Transparent button overlay for nav ── */
-        .sidebar-btn-overlay button {
-            background: transparent !important;
-            border: none !important;
-            color: transparent !important;
-            width: calc(100% - 16px) !important;
-            height: 35px !important;
-            margin-left: 8px !important;
-            margin-top: -37px !important; /* Slide up to overlap the nav-item exactly */
-            padding: 0 !important;
-            z-index: 10 !important;
-            cursor: pointer !important;
-            box-shadow: none !important;
-        }
-        .sidebar-btn-overlay button:hover, .sidebar-btn-overlay button:focus {
-            background: transparent !important;
-            color: transparent !important;
-            box-shadow: none !important;
-        }
-
-        /* ── Bottom section buttons styling ── */
-        .bottom-btn-container {
-            position: fixed !important;
-            bottom: 14px !important;
-            width: 208px !important; /* 240px - 32px padding */
-            left: 16px !important;
-            z-index: 100 !important;
-            display: flex !important;
-            gap: 8px !important;
-        }
-        .bottom-btn-container button {
-            background: rgba(255,255,255,0.05) !important;
-            border: 1px solid rgba(255,255,255,0.08) !important;
-            border-radius: 6px !important;
-            padding: 5px 10px !important;
-            font-size: 11px !important;
-            color: rgba(255,255,255,0.6) !important;
-            width: 100% !important;
-            text-align: center !important;
-            cursor: pointer !important;
-            font-family: 'Inter', sans-serif !important;
-            font-weight: 450 !important;
-        }
-        .bottom-btn-container button:hover {
-            background: rgba(255,255,255,0.1) !important;
-            border-color: rgba(255,255,255,0.15) !important;
-            color: #FFFFFF !important;
         }
 
         /* ── Section headings ── */
@@ -401,7 +347,7 @@ def main():
         if not is_session_valid():
             pg = st.navigation([st.Page(auth_page, title="Login / Register")])
         else:
-            pages = [
+            pages_list = [
                 st.Page("pages/dashboard.py", title="Dashboard"),
                 st.Page("pages/planner.py", title="Planner"),
                 st.Page("pages/tasks.py", title="Task Manager"),
@@ -410,67 +356,174 @@ def main():
                 st.Page("pages/chat.py", title="AI Assistant"),
                 st.Page("pages/profile.py", title="Profile"),
             ]
-            pg = st.navigation(pages, position="hidden")
+            pg = st.navigation(pages_list, position="hidden")
 
-            # TOP — Logo block
-            st.sidebar.markdown("""
-                <div style="padding:20px 16px 16px;">
-                  <div style="font-family:'Instrument Serif',serif; font-style:italic; 
-                  font-size:1.2rem; color:#FFFFFF; letter-spacing:-0.3px;">Infera</div>
-                  <div style="font-size:10px; color:rgba(255,255,255,0.25); 
-                  margin-top:2px; text-transform:uppercase; letter-spacing:0.1em;">
-                  Study AI</div>
+            # Route mapping to resolve st.switch_page paths
+            page_paths = {
+                "Dashboard": "pages/dashboard.py",
+                "Planner": "pages/planner.py",
+                "Task Manager": "pages/tasks.py",
+                "Infera Flow": "pages/infera_flow.py",
+                "Analytics": "pages/analytics.py",
+                "AI Assistant": "pages/chat.py",
+                "Profile": "pages/profile.py"
+            }
+
+            # Map the currently selected streamlit page returned by st.navigation to keep state in sync
+            title_to_key = {
+                "Dashboard": "Dashboard",
+                "Planner": "Planner",
+                "Task Manager": "Task Manager",
+                "Infera Flow": "Infera Flow",
+                "Analytics": "Analytics",
+                "AI Assistant": "AI Assistant",
+                "Profile": "Profile"
+            }
+            st.session_state['current_page'] = title_to_key.get(pg.title, "Dashboard")
+
+            with st.sidebar:
+                # Logo block
+                st.markdown("""
+                <div style="padding:24px 20px 20px; border-bottom:1px solid rgba(255,255,255,0.06);">
+                    <div style="font-family:'Instrument Serif',serif; font-style:italic; 
+                    font-size:1.3rem; color:#FFFFFF; letter-spacing:-0.3px;">Infera</div>
+                    <div style="font-size:9px; color:rgba(255,255,255,0.2); margin-top:2px; 
+                    text-transform:uppercase; letter-spacing:0.15em;">Study AI</div>
                 </div>
-                <div class="subtle-divider" style="margin:0;"></div>
-            """, unsafe_allow_html=True)
-
-            # MIDDLE — Navigation Label
-            st.sidebar.markdown("""
-                <div style="font-size:10px; color:rgba(255,255,255,0.2); 
-                text-transform:uppercase; letter-spacing:0.1em; padding:12px 16px 4px;">
-                Navigation</div>
-            """, unsafe_allow_html=True)
-
-            # RENDER Custom Navigation links
-            # We iterate over the first 6 pages in the list (excluding Profile)
-            for p in pages[:-1]:
-                is_active = (pg.title == p.title)
-                st.sidebar.markdown(f"""
-                    <div class="nav-item {'active' if is_active else ''}">
-                      <div class="nav-dot"></div>
-                      {p.title}
-                    </div>
+                <div style="padding:16px 12px 8px; font-size:9px; color:rgba(255,255,255,0.2); 
+                text-transform:uppercase; letter-spacing:0.12em;">Navigation</div>
                 """, unsafe_allow_html=True)
 
-                # Transparent Overlay Button
-                st.sidebar.markdown("<div class='sidebar-btn-overlay'>", unsafe_allow_html=True)
-                if st.sidebar.button("", key=f"btn_overlay_{p.title.lower().replace(' ', '_')}"):
-                    st.switch_page(p)
-                st.sidebar.markdown("</div>", unsafe_allow_html=True)
+                pages = ["Dashboard", "Planner", "Task Manager", 
+                         "Infera Flow", "Analytics", "AI Assistant"]
+                
+                for page in pages:
+                    is_active = st.session_state.get('current_page') == page
+                    
+                    # Style active vs inactive with CSS injection per button
+                    if is_active:
+                        st.markdown(f"""
+                        <style>
+                        div[data-testid="stButton"]:has(button[key="{page}_nav"]) button {{
+                            background: rgba(255,255,255,0.08) !important;
+                            color: #FFFFFF !important;
+                            border: 1px solid rgba(255,255,255,0.12) !important;
+                            text-align: left !important;
+                            font-weight: 500 !important;
+                            border-radius: 8px !important;
+                            padding: 9px 14px !important;
+                            width: 100% !important;
+                            font-size: 13px !important;
+                            margin: 1px 0 !important;
+                        }}
+                        </style>
+                        """, unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"""
+                        <style>
+                        div[data-testid="stButton"]:has(button[key="{page}_nav"]) button {{
+                            background: transparent !important;
+                            color: rgba(255,255,255,0.45) !important;
+                            border: 1px solid transparent !important;
+                            text-align: left !important;
+                            font-weight: 400 !important;
+                            border-radius: 8px !important;
+                            padding: 9px 14px !important;
+                            width: 100% !important;
+                            font-size: 13px !important;
+                            margin: 1px 0 !important;
+                        }}
+                        </style>
+                        """, unsafe_allow_html=True)
+                    
+                    if st.button(page, key=f"{page}_nav", use_container_width=True):
+                        st.session_state['current_page'] = page
+                        st.switch_page(page_paths[page])
 
-            # BOTTOM — User block (fixed bottom background card)
-            user_name = st.session_state.get('name', 'User')
-            st.sidebar.markdown(f"""
-                <div style="position:fixed; bottom:0; left:0; width:240px; height:95px;
-                padding:14px 16px; border-top:1px solid rgba(255,255,255,0.06); 
-                background:#0D0F14; z-index:90;">
-                  <div style="font-size:10px; color:rgba(255,255,255,0.25); 
-                  text-transform:uppercase; letter-spacing:0.08em;">Logged in as</div>
-                  <div style="font-size:13px; font-weight:500; color:#FFFFFF; 
-                  margin-top:3px;">{user_name}</div>
+                # Spacer to push bottom section down
+                st.markdown("""
+                <div style="flex:1; min-height:40px;"></div>
+                """, unsafe_allow_html=True)
+
+                # Bottom user section - fixed at bottom
+                st.markdown("""
+                <style>
+                .user-bottom-block {
+                    position: fixed;
+                    bottom: 0;
+                    left: 0;
+                    width: 288px;
+                    padding: 14px 16px;
+                    background: #0D0F14;
+                    border-top: 1px solid rgba(255,255,255,0.06);
+                }
+                .user-bottom-block .logged-label {
+                    font-size: 9px;
+                    color: rgba(255,255,255,0.2);
+                    text-transform: uppercase;
+                    letter-spacing: 0.1em;
+                    margin-bottom: 4px;
+                }
+                .user-bottom-block .user-name {
+                    font-size: 13px;
+                    font-weight: 500;
+                    color: #FFFFFF;
+                    margin-bottom: 10px;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+
+                st.markdown(f"""
+                <div class="user-bottom-block">
+                    <div class="logged-label">Logged in as</div>
+                    <div class="user-name">{st.session_state.get('name', 'User')}</div>
                 </div>
-            """, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
 
-            # Fixed overlay columns for Profile & Logout buttons
-            st.sidebar.markdown("<div class='bottom-btn-container'>", unsafe_allow_html=True)
-            col_prof, col_logo = st.sidebar.columns(2)
-            with col_prof:
-                if st.button("Profile", key="sidebar_profile_btn"):
-                    st.switch_page("pages/profile.py")
-            with col_logo:
-                if st.button("Logout", key="sidebar_logout_btn"):
-                    logout()
-            st.sidebar.markdown("</div>", unsafe_allow_html=True)
+                # Profile and Logout buttons pinned at bottom
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown("""
+                    <style>
+                    div[data-testid="stButton"]:has(button[key="profile_nav"]) button {
+                        background: rgba(255,255,255,0.05) !important;
+                        border: 1px solid rgba(255,255,255,0.08) !important;
+                        color: rgba(255,255,255,0.6) !important;
+                        font-size: 11px !important;
+                        padding: 6px 10px !important;
+                        border-radius: 6px !important;
+                        width: 100% !important;
+                        position: fixed;
+                        bottom: 16px;
+                        left: 16px;
+                        width: 120px !important;
+                    }
+                    </style>
+                    """, unsafe_allow_html=True)
+                    if st.button("Profile", key="profile_nav"):
+                        st.session_state['current_page'] = 'Profile'
+                        st.switch_page(page_paths['Profile'])
+                with col2:
+                    st.markdown("""
+                    <style>
+                    div[data-testid="stButton"]:has(button[key="logout_nav"]) button {
+                        background: rgba(255,255,255,0.05) !important;
+                        border: 1px solid rgba(255,255,255,0.08) !important;
+                        color: rgba(255,255,255,0.6) !important;
+                        font-size: 11px !important;
+                        padding: 6px 10px !important;
+                        border-radius: 6px !important;
+                        position: fixed;
+                        bottom: 16px;
+                        left: 148px;
+                        width: 120px !important;
+                    }
+                    </style>
+                    """, unsafe_allow_html=True)
+                    if st.button("Logout", key="logout_nav"):
+                        for key in list(st.session_state.keys()):
+                            del st.session_state[key]
+                        st.rerun()
 
     pg.run()
 

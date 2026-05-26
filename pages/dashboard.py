@@ -37,9 +37,6 @@ today_str = datetime.datetime.now().strftime("%A, %d %B %Y")
 # HEADER BLOCK
 st.markdown(f"""
 <div style="margin-bottom:28px;">
-  <div style="font-size:11px; color:rgba(255,255,255,0.25); 
-  text-transform:uppercase; letter-spacing:0.1em; 
-  margin-bottom:8px;">// Overview</div>
   <div class="section-title">Good {greeting},<br/>{name}</div>
   <div class="section-sub">{today_str}</div>
 </div>
@@ -108,6 +105,27 @@ with col3:
         </div>
     """, unsafe_allow_html=True)
 
+# Custom DataFrame styling
+st.markdown("""
+<style>
+[data-testid="stDataFrame"] {
+    background: rgba(255,255,255,0.02) !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+    border-radius: 8px !important;
+}
+[data-testid="stDataFrame"] table {
+    color: rgba(255,255,255,0.8) !important;
+}
+[data-testid="stDataFrame"] th {
+    background: rgba(255,255,255,0.04) !important;
+    color: rgba(255,255,255,0.35) !important;
+    font-size: 10px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.08em !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # HIGH PRIORITY SECTION
 st.markdown("""
 <div class="section-title" style="font-size:1.1rem; margin:28px 0 12px;">
@@ -123,27 +141,9 @@ cursor.execute("""
 high_priority_tasks = cursor.fetchall()
 
 if high_priority_tasks:
-    table_html = """
-    <table class="data-table">
-    <thead>
-      <tr>
-        <th>Task</th>
-        <th>Subject</th>
-        <th>Deadline</th>
-      </tr>
-    </thead>
-    <tbody>
-    """
-    for task in high_priority_tasks:
-        table_html += f"""
-        <tr>
-          <td>{task['Title']}</td>
-          <td>{task['Subject']}</td>
-          <td>{task['Deadline']}</td>
-        </tr>
-        """
-    table_html += "</tbody></table>"
-    st.markdown(table_html, unsafe_allow_html=True)
+    high_priority_df = pd.DataFrame([dict(r) for r in high_priority_tasks], columns=['Title', 'Subject', 'Deadline'])
+    high_priority_df.columns = ['Task', 'Subject', 'Deadline']
+    st.dataframe(high_priority_df, hide_index=True, use_container_width=True)
 else:
     st.markdown("<p style='font-size:12px; color:rgba(255,255,255,0.25);'>No high priority tasks.</p>", unsafe_allow_html=True)
 
@@ -163,27 +163,9 @@ upcoming_tasks = cursor.fetchall()
 conn.close()
 
 if upcoming_tasks:
-    table_html = """
-    <table class="data-table">
-    <thead>
-      <tr>
-        <th>Task</th>
-        <th>Subject</th>
-        <th>Deadline</th>
-      </tr>
-    </thead>
-    <tbody>
-    """
-    for task in upcoming_tasks:
-        table_html += f"""
-        <tr>
-          <td>{task['Title']}</td>
-          <td>{task['Subject']}</td>
-          <td>{task['Deadline']}</td>
-        </tr>
-        """
-    table_html += "</tbody></table>"
-    st.markdown(table_html, unsafe_allow_html=True)
+    upcoming_df = pd.DataFrame([dict(r) for r in upcoming_tasks], columns=['Title', 'Subject', 'Deadline'])
+    upcoming_df.columns = ['Task', 'Subject', 'Deadline']
+    st.dataframe(upcoming_df, hide_index=True, use_container_width=True)
 else:
     st.markdown("<p style='font-size:12px; color:rgba(255,255,255,0.25);'>No upcoming deadlines in the next 7 days.</p>", unsafe_allow_html=True)
 

@@ -10,18 +10,12 @@ if not st.session_state.get('logged_in'):
 
 user_id = st.session_state['user_id']
 
-# Custom padding & style system
+# Custom padding system
 st.markdown("""
 <style>
 .main .block-container {
     padding: 32px 40px !important;
     max-width: 1100px !important;
-}
-.brighter-border-btn button {
-    border: 1px solid rgba(255,255,255,0.3) !important;
-}
-.brighter-border-btn button:hover {
-    border-color: rgba(255,255,255,0.5) !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -41,9 +35,6 @@ if 'pomodoro_subject' not in st.session_state:
 # HEADER
 st.markdown("""
 <div style="margin-bottom:28px;">
-  <div style="font-size:11px; color:rgba(255,255,255,0.25); 
-  text-transform:uppercase; letter-spacing:0.1em; 
-  margin-bottom:8px;">// Focus</div>
   <div class="section-title">Infera Flow</div>
   <div class="section-sub">Deep work, tracked.</div>
 </div>
@@ -68,27 +59,26 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# FOUR BUTTONS (Start Flow · Pause Flow · Reset Flow · Complete Flow)
-c1, c2, c3, c4 = st.columns(4)
+# FOUR BUTTONS (Start Flow · Pause Flow · Reset Flow · Complete Flow in equal columns)
+col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
 
-with c1:
+with col1:
     if st.button("Start Flow", key="btn_start_flow", use_container_width=True):
         st.session_state['running'] = True
         st.rerun()
 
-with c2:
+with col2:
     if st.button("Pause Flow", key="btn_pause_flow", use_container_width=True):
         st.session_state['running'] = False
         st.rerun()
 
-with c3:
+with col3:
     if st.button("Reset Flow", key="btn_reset_flow", use_container_width=True):
         st.session_state['running'] = False
         st.session_state['seconds_left'] = 1500
         st.rerun()
 
-with c4:
-    st.markdown("<div class='brighter-border-btn'>", unsafe_allow_html=True)
+with col4:
     if st.button("Complete Flow", key="btn_complete_flow", use_container_width=True):
         st.session_state['running'] = False
         elapsed_minutes = (1500 - st.session_state['seconds_left']) // 60
@@ -101,7 +91,6 @@ with c4:
         st.session_state['seconds_left'] = 1500
         st.session_state['sessions_today'] += 1
         st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
 
 # SESSIONS TODAY COUNTER
 st.markdown(f"""

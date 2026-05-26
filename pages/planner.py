@@ -33,9 +33,6 @@ st.markdown('<div class="main-content">', unsafe_allow_html=True)
 # HEADER
 st.markdown("""
 <div style="margin-bottom:28px;">
-  <div style="font-size:11px; color:rgba(255,255,255,0.25); 
-  text-transform:uppercase; letter-spacing:0.1em; 
-  margin-bottom:8px;">// Planner</div>
   <div class="section-title">Study Plan Generator</div>
 </div>
 """, unsafe_allow_html=True)

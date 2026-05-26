@@ -40,9 +40,6 @@ total_tasks = len(all_tasks)
 # HEADER
 st.markdown(f"""
 <div style="margin-bottom:28px;">
-  <div style="font-size:11px; color:rgba(255,255,255,0.25); 
-  text-transform:uppercase; letter-spacing:0.1em; 
-  margin-bottom:8px;">// Task Manager</div>
   <div style="display:flex; align-items:center; gap:12px;">
     <div class="section-title">Task Manager</div>
     <span style="background:rgba(255,255,255,0.07); border:1px solid 
@@ -146,7 +143,7 @@ else:
     st.markdown("""
     <div style="font-size:10px; color:rgba(255,255,255,0.25); 
     text-transform:uppercase; letter-spacing:0.08em; margin: 24px 0 10px;">
-    // Quick Actions</div>
+    Quick Actions</div>
     """, unsafe_allow_html=True)
     
     for task in tasks:
