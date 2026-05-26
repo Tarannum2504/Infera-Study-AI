@@ -19,23 +19,7 @@ client = InferenceClient(
     api_key=os.getenv("HF_API_KEY")
 )
 
-# Custom CSS styling for strict dark mode rules
-st.markdown("""
-<style>
-.stApp {
-    background-color: #0E1117;
-    color: #FFFFFF;
-}
-p, div, span, label {
-    color: #A0A0A0 !important;
-}
-h1, h2, h3, h4, h5, h6 {
-    color: #FFFFFF !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
-st.title("AI Study Planner")
+st.markdown('<div class="dash-header">AI Study Planner</div>', unsafe_allow_html=True)
 
 # Input field
 syllabus = st.text_area("Paste your syllabus or topics here", height=200, key="syllabus_input")
@@ -79,8 +63,13 @@ if st.button("Generate Study Plan"):
                 result_text = response.choices[0].message.content
 
             # Display plan inside a styled container
+            is_light_mode = st.session_state.get('app_theme') == "Light Mode"
+            bg_color = "#FFFFFF" if is_light_mode else "#1F1F1F"
+            border_color = "#F0DCD3" if is_light_mode else "#2C2C2C"
+            text_color = "#2C1A1D" if is_light_mode else "#FFFFFF"
+
             st.markdown(f"""
-            <div style="background-color: #161B22; border: 1px solid #2A2F36; border-radius: 8px; padding: 20px; color: #FFFFFF !important; white-space: pre-wrap;">
+            <div style="background-color: {bg_color}; border: 1px solid {border_color}; border-radius: 12px; padding: 20px; color: {text_color}; white-space: pre-wrap; font-family: 'Inter', sans-serif;">
 {result_text}
             </div>
             """, unsafe_allow_html=True)

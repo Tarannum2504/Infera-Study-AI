@@ -1,10 +1,8 @@
 import streamlit as st
 import pandas as pd
-import altair as alt
-from datetime import date
-from database.db import get_dashboard_stats, get_weekly_hours, get_subject_breakdown, get_pending_tasks, get_streak
+from database.db import get_connection, get_all_sessions
 
-# Require login
+# Auth check
 if not st.session_state.get('logged_in'):
     st.warning("Please log in to view this page.")
     st.stop()
@@ -12,19 +10,12 @@ if not st.session_state.get('logged_in'):
 user_id = st.session_state['user_id']
 name = st.session_state.get('name', 'User')
 
-# DESIGN RULES
+# Design rules styling
 st.markdown("""
 <style>
 .stApp {
     background-color: #0E1117;
     color: #FFFFFF;
-}
-.metric-card {
-    background-color: #161B22;
-    border: 1px solid #2A2F36;
-    border-radius: 8px;
-    padding: 16px;
-    text-align: center;
 }
 p, div, span, label {
     color: #A0A0A0 !important;
@@ -35,77 +26,84 @@ h1, h2, h3, h4, h5, h6 {
 </style>
 """, unsafe_allow_html=True)
 
-# SECTION 1 - GREETING
 st.title(f"Welcome back, {name}")
-st.caption(f"Today is {date.today().strftime('%A, %d %B %Y')}")
-st.divider()
 
-# SECTION 2 - KPI CARDS
-stats = get_dashboard_stats(user_id)
-streak = get_streak(user_id)
+# Fetch data
+conn = get_connection()
+cursor = conn.cursor()
 
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    st.metric(label="Study Hours", value=round(stats['total_hours'], 1))
-with col2:
-    st.metric(label="Tasks Done", value=stats['tasks_done'])
-with col3:
-    st.metric(label="Active Tasks", value=stats['active_tasks'])
-with col4:
-    st.metric(label="Day Streak", value=streak)
+# 1. Study Hours
+cursor.execute("SELECT SUM(duration_minutes)/60.0 as total_hours FROM study_sessions WHERE user_id=?", (user_id,))
+row = cursor.fetchone()
+study_hours = round(row['total_hours'], 1) if row and row['total_hours'] else 0.0
 
-# SECTION 3 - CHARTS
-weekly_hours = get_weekly_hours(user_id)
-subject_breakdown = get_subject_breakdown(user_id)
+# 2. Tasks Completed
+cursor.execute("SELECT COUNT(*) as completed FROM tasks WHERE user_id=? AND status='done'", (user_id,))
+completed_tasks = cursor.fetchone()['completed']
 
-if not weekly_hours and not subject_breakdown:
-    st.info("No study data yet — log your first session.")
-else:
-    col_chart1, col_chart2 = st.columns(2)
+# 3. Focus Score Logic
+sessions = get_all_sessions(user_id)
+cursor.execute("SELECT * FROM tasks WHERE user_id=?", (user_id,))
+tasks = [dict(r) for r in cursor.fetchall()]
+
+total_tasks = len(tasks)
+completion_rate = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
+
+if sessions:
+    df = pd.DataFrame(sessions)
+    df['date'] = pd.to_datetime(df['date'])
+    daily_df = df.groupby('date')['duration_minutes'].sum().reset_index()
+    daily_avg_minutes = daily_df['duration_minutes'].mean()
     
-    with col_chart1:
-        if weekly_hours:
-            df_weekly = pd.DataFrame(weekly_hours)
-            chart1 = alt.Chart(df_weekly).mark_bar(color='#FFFFFF').encode(
-                x=alt.X('date:T', title='Date'),
-                y=alt.Y('hours:Q', title='Hours')
-            ).properties(
-                title='Last 7 Days'
-            ).configure_view(
-                fill='#161B22'
-            ).configure_axis(
-                labelColor='#A0A0A0', titleColor='#FFFFFF', gridColor='#2A2F36'
-            ).configure_title(
-                color='#FFFFFF', fontSize=16
-            )
-            st.altair_chart(chart1, use_container_width=True)
-        else:
-            st.info("No weekly data.")
-
-    with col_chart2:
-        if subject_breakdown:
-            df_subject = pd.DataFrame(subject_breakdown)
-            chart2 = alt.Chart(df_subject).mark_bar(color='#FFFFFF').encode(
-                x=alt.X('hours:Q', title='Hours'),
-                y=alt.Y('subject:N', sort='-x', title='Subject')
-            ).properties(
-                title='Top Subjects'
-            ).configure_view(
-                fill='#161B22'
-            ).configure_axis(
-                labelColor='#A0A0A0', titleColor='#FFFFFF', gridColor='#2A2F36'
-            ).configure_title(
-                color='#FFFFFF', fontSize=16
-            )
-            st.altair_chart(chart2, use_container_width=True)
-        else:
-            st.info("No subject data.")
-
-# SECTION 4 - RECENT TASKS
-st.subheader("Pending Tasks")
-pending_tasks = get_pending_tasks(user_id)
-if pending_tasks:
-    df_tasks = pd.DataFrame(pending_tasks)
-    st.dataframe(df_tasks, hide_index=True, use_container_width=True)
+    seven_days_ago = pd.Timestamp.now().normalize() - pd.Timedelta(days=7)
+    recent_days = daily_df[daily_df['date'] >= seven_days_ago]['date'].nunique()
+    consistency_rate = (recent_days / 7) * 100
+    
+    volume_score = min(daily_avg_minutes / 120, 1.0) * 100
+    focus_score = round((completion_rate * 0.4) + (consistency_rate * 0.35) + (volume_score * 0.25), 1)
 else:
-    st.info("No pending tasks.")
+    focus_score = round(completion_rate * 0.4, 1)
+
+# DISPLAY METRIC CARDS
+col1, col2, col3 = st.columns(3)
+col1.metric("Study Hours", f"{study_hours}")
+col2.metric("Focus Score", f"{focus_score}")
+col3.metric("Tasks Completed", f"{completed_tasks}")
+
+st.write("")
+st.write("")
+
+# HIGH PRIORITY TASKS
+st.subheader("High Priority & Upcoming")
+cursor.execute("""
+    SELECT title as Title, subject as Subject, deadline as Deadline 
+    FROM tasks 
+    WHERE user_id=? AND status != 'done' AND priority='high'
+    ORDER BY deadline ASC LIMIT 5
+""", (user_id,))
+high_priority_tasks = cursor.fetchall()
+
+if high_priority_tasks:
+    df_hp = pd.DataFrame([dict(r) for r in high_priority_tasks])
+    st.dataframe(df_hp, hide_index=True, width='stretch')
+else:
+    st.info("No high priority tasks.")
+
+st.write("")
+
+# UPCOMING DEADLINES
+st.subheader("Upcoming Deadlines")
+cursor.execute("""
+    SELECT title as Title, subject as Subject, deadline as Deadline 
+    FROM tasks 
+    WHERE user_id=? AND status != 'done' AND deadline >= date('now')
+    ORDER BY deadline ASC LIMIT 5
+""", (user_id,))
+upcoming_tasks = cursor.fetchall()
+conn.close()
+
+if upcoming_tasks:
+    df_up = pd.DataFrame([dict(r) for r in upcoming_tasks])
+    st.dataframe(df_up, hide_index=True, width='stretch')
+else:
+    st.info("No upcoming deadlines.")

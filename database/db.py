@@ -101,13 +101,13 @@ def get_tasks(user_id, subject_filter=None, status_filter=None):
     conn.close()
     return [dict(row) for row in tasks]
 
-def add_task(user_id, title, subject, deadline, priority):
+def add_task(user_id, title, subject, deadline, priority, progress=0):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute('''
         INSERT INTO tasks (user_id, title, subject, deadline, priority, status, progress)
-        VALUES (?, ?, ?, ?, ?, 'pending', 0)
-    ''', (user_id, title, subject, deadline, priority))
+        VALUES (?, ?, ?, ?, ?, 'pending', ?)
+    ''', (user_id, title, subject, deadline, priority, progress))
     conn.commit()
     conn.close()
 
@@ -311,3 +311,53 @@ def get_streak(user_id):
             break
             
     return streak
+
+def update_user_profile(user_id, name, email):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        UPDATE users SET name=?, email=? WHERE user_id=?
+    ''', (name, email, user_id))
+    conn.commit()
+    conn.close()
+
+def update_user_password(user_id, new_hashed_password):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        UPDATE users SET password=? WHERE user_id=?
+    ''', (new_hashed_password, user_id))
+    conn.commit()
+    conn.close()
+
+def get_user_by_id(user_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE user_id=?', (user_id,))
+    user = cursor.fetchone()
+    conn.close()
+    return dict(user) if user else None
+
+def get_profile_stats(user_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT created_at FROM users WHERE user_id=?', (user_id,))
+    user_row = cursor.fetchone()
+    member_since = user_row['created_at'] if user_row else None
+    
+    cursor.execute('SELECT COUNT(*) as count FROM study_sessions WHERE user_id=?', (user_id,))
+    sessions_row = cursor.fetchone()
+    total_sessions = sessions_row['count'] if sessions_row else 0
+    
+    cursor.execute('SELECT COUNT(*) as count FROM tasks WHERE user_id=?', (user_id,))
+    tasks_row = cursor.fetchone()
+    tasks_created = tasks_row['count'] if tasks_row else 0
+    
+    conn.close()
+    
+    return {
+        'member_since': member_since[:10] if member_since else 'N/A',
+        'total_sessions': total_sessions,
+        'tasks_created': tasks_created
+    }
