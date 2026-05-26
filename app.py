@@ -10,64 +10,256 @@ def main():
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap');
 
-        /* ── Reset & Base ── */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        .stApp {
-            background: #080A0F !important;
-            background-image: 
-                radial-gradient(ellipse 80% 50% at 20% 10%, 
-                    rgba(255,255,255,0.03) 0%, transparent 60%),
-                radial-gradient(ellipse 60% 40% at 80% 80%, 
-                    rgba(255,255,255,0.02) 0%, transparent 50%) !important;
-            background-attachment: fixed !important;
+        /* Base */
+        html, body, .stApp {
+            background-color: #060810 !important;
             font-family: 'Inter', sans-serif !important;
             color: #FFFFFF !important;
         }
 
-        /* Animated subtle grain overlay */
+        /* Animated orb background */
         .stApp::before {
             content: '';
             position: fixed;
             inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-            pointer-events: none;
             z-index: 0;
-            opacity: 0.4;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse 700px 500px at 15% 15%,
+                    rgba(255,255,255,0.04) 0%,
+                    transparent 70%),
+                radial-gradient(ellipse 500px 400px at 85% 75%,
+                    rgba(255,255,255,0.025) 0%,
+                    transparent 65%),
+                radial-gradient(ellipse 400px 600px at 60% 20%,
+                    rgba(255,255,255,0.015) 0%,
+                    transparent 60%);
+            animation: orbShift 18s ease-in-out infinite alternate;
         }
 
-        /* Glowing orbs for dynamic feel */
+        @keyframes orbShift {
+            0%   { opacity: 0.7; transform: scale(1) translateY(0px); }
+            33%  { opacity: 1;   transform: scale(1.05) translateY(-20px); }
+            66%  { opacity: 0.8; transform: scale(0.97) translateY(10px); }
+            100% { opacity: 1;   transform: scale(1.03) translateY(-10px); }
+        }
+
+        /* Noise texture overlay */
         .stApp::after {
             content: '';
             position: fixed;
-            width: 600px;
-            height: 600px;
-            border-radius: 50%;
-            background: radial-gradient(circle, 
-                rgba(255,255,255,0.015) 0%, 
-                transparent 70%);
-            top: -200px;
-            right: -200px;
-            pointer-events: none;
+            inset: 0;
             z-index: 0;
+            pointer-events: none;
+            opacity: 0.025;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        /* Ensure content renders above background */
+        .main, [data-testid="stSidebar"],
+        .block-container, section {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Page fade-in animation */
+        .block-container {
+            animation: pageIn 0.3s ease forwards;
+            padding: 32px 40px !important;
+            max-width: 1100px !important;
+        }
+        @keyframes pageIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Sidebar base ── */
+        [data-testid="stSidebar"] {
+            background: rgba(8, 10, 16, 0.95) !important;
+            border-right: 1px solid rgba(255,255,255,0.06) !important;
+            backdrop-filter: blur(20px) !important;
+        }
+
+        /* Sidebar open/close animation and toggle button fix */
+        [data-testid="stSidebar"] {
+            transition: transform 0.25s ease, width 0.25s ease !important;
+        }
+
+        /* Restore sidebar collapse button */
+        [data-testid="collapsedControl"] {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: fixed !important;
+            top: 50% !important;
+            left: 0 !important;
+            z-index: 9999 !important;
+            background: rgba(8,10,16,0.95) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            border-left: none !important;
+            border-radius: 0 6px 6px 0 !important;
+            padding: 8px 6px !important;
+            cursor: pointer !important;
+            backdrop-filter: blur(10px) !important;
+        }
+        [data-testid="collapsedControl"]:hover {
+            background: rgba(255,255,255,0.08) !important;
+            border-color: rgba(255,255,255,0.15) !important;
+        }
+        [data-testid="collapsedControl"] svg {
+            color: rgba(255,255,255,0.5) !important;
+            fill: rgba(255,255,255,0.5) !important;
+        }
+
+        /* Nav button hover glow effect */
+        [data-testid="stSidebar"] .stButton button {
+            position: relative !important;
+            overflow: hidden !important;
+            transition: all 0.2s ease !important;
+        }
+        [data-testid="stSidebar"] .stButton button::before {
+            content: '' !important;
+            position: absolute !important;
+            left: 0 !important; top: 0 !important; bottom: 0 !important;
+            width: 2px !important;
+            background: rgba(255,255,255,0) !important;
+            transition: background 0.2s ease !important;
+            border-radius: 0 !important;
+        }
+        [data-testid="stSidebar"] .stButton button:hover::before {
+            background: rgba(255,255,255,0.4) !important;
+        }
+        [data-testid="stSidebar"] .stButton button:hover {
+            background: rgba(255,255,255,0.06) !important;
+            color: #FFFFFF !important;
+            padding-left: 18px !important;
         }
 
         /* ── Hide Streamlit chrome ── */
         #MainMenu, footer, header { visibility: hidden !important; }
-        .stDeployButton { display: none !important; }
         [data-testid="stToolbar"] { display: none !important; }
+        .stDeployButton { display: none !important; }
 
-        /* ── Sidebar ── */
-        [data-testid="stSidebar"] {
-            background: #0D0F14 !important;
-            border-right: 1px solid rgba(255,255,255,0.06) !important;
-            padding: 0 !important;
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { 
+            background: rgba(255,255,255,0.08); 
+            border-radius: 99px; 
         }
-        [data-testid="stSidebar"] > div {
-            padding: 0 !important;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
+
+        /* ── Input fields ── */
+        .stTextInput input, .stTextArea textarea,
+        .stSelectbox select, .stNumberInput input {
+            background: rgba(255,255,255,0.04) !important;
+            border: 1px solid rgba(255,255,255,0.08) !important;
+            border-radius: 8px !important;
+            color: #FFFFFF !important;
+            font-family: 'Inter', sans-serif !important;
+            font-size: 13px !important;
+            transition: border-color 0.2s ease !important;
+        }
+        .stTextInput input:focus, .stTextArea textarea:focus {
+            border-color: rgba(255,255,255,0.2) !important;
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.04) !important;
+            outline: none !important;
+        }
+        .stTextInput label, .stTextArea label,
+        .stSelectbox label, .stNumberInput label {
+            color: rgba(255,255,255,0.35) !important;
+            font-size: 10px !important;
+            font-weight: 500 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.08em !important;
+        }
+
+        /* ── Buttons ── */
+        .stButton button {
+            background: rgba(255,255,255,0.05) !important;
+            border: 1px solid rgba(255,255,255,0.09) !important;
+            border-radius: 8px !important;
+            color: rgba(255,255,255,0.8) !important;
+            font-family: 'Inter', sans-serif !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            transition: all 0.15s ease !important;
+            letter-spacing: 0.01em !important;
+        }
+        .stButton button:hover {
+            background: rgba(255,255,255,0.09) !important;
+            border-color: rgba(255,255,255,0.18) !important;
+            color: #FFFFFF !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
+        }
+
+        /* ── Primary button ── */
+        .btn-primary {
+            background: #FFFFFF !important;
+            color: #000000 !important;
+            border: none !important;
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+        }
+        .btn-primary:hover {
+            background: rgba(255,255,255,0.9) !important;
+        }
+
+        /* ── Metrics ── */
+        [data-testid="stMetric"] {
+            background: rgba(255,255,255,0.03) !important;
+            border: 1px solid rgba(255,255,255,0.07) !important;
+            border-radius: 10px !important;
+            padding: 16px 20px !important;
+            position: relative !important;
+            overflow: hidden !important;
+            transition: border-color 0.2s ease !important;
+        }
+        [data-testid="stMetric"]:hover {
+            border-color: rgba(255,255,255,0.12) !important;
+        }
+        [data-testid="stMetric"]::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, 
+                rgba(255,255,255,0.12), transparent);
+        }
+        [data-testid="stMetricValue"] {
+            font-family: 'Instrument Serif', serif !important;
+            font-style: italic !important;
+            font-size: 2.2rem !important;
+            color: #FFFFFF !important;
+            letter-spacing: -1px !important;
+        }
+        [data-testid="stMetricLabel"] {
+            font-size: 10px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.1em !important;
+            color: rgba(255,255,255,0.3) !important;
+            font-weight: 500 !important;
+        }
+
+        /* ── Dataframe ── */
+        [data-testid="stDataFrame"] {
+            border: 1px solid rgba(255,255,255,0.06) !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+        }
+
+        /* ── Altair charts ── */
+        .vega-embed, canvas { background: transparent !important; }
+
+        /* ── Headings ── */
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Instrument Serif', serif !important;
+            font-style: italic !important;
+            color: #FFFFFF !important;
+            letter-spacing: -0.5px !important;
+        }
+        p, span, div, label {
+            color: rgba(255,255,255,0.75);
         }
 
         /* ── Liquid glass card ── */
@@ -189,62 +381,6 @@ def main():
             transition: width 0.3s ease;
         }
 
-        /* ── Input fields ── */
-        .stTextInput input, .stTextArea textarea,
-        .stSelectbox select, .stNumberInput input {
-            background: rgba(255,255,255,0.04) !important;
-            border: 1px solid rgba(255,255,255,0.08) !important;
-            border-radius: 8px !important;
-            color: #FFFFFF !important;
-            font-family: 'Inter', sans-serif !important;
-            font-size: 13px !important;
-            padding: 10px 14px !important;
-            transition: border-color 0.2s ease !important;
-        }
-        .stTextInput input:focus, .stTextArea textarea:focus {
-            border-color: rgba(255,255,255,0.25) !important;
-            outline: none !important;
-            box-shadow: none !important;
-        }
-        .stTextInput label, .stTextArea label,
-        .stSelectbox label, .stNumberInput label {
-            color: rgba(255,255,255,0.4) !important;
-            font-size: 11px !important;
-            font-weight: 500 !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.07em !important;
-        }
-
-        /* ── Buttons ── */
-        .stButton button {
-            background: rgba(255,255,255,0.06) !important;
-            border: 1px solid rgba(255,255,255,0.1) !important;
-            border-radius: 8px !important;
-            color: #FFFFFF !important;
-            font-family: 'Inter', sans-serif !important;
-            font-size: 13px !important;
-            font-weight: 500 !important;
-            padding: 8px 16px !important;
-            transition: all 0.15s ease !important;
-            cursor: pointer !important;
-        }
-        .stButton button:hover {
-            background: rgba(255,255,255,0.1) !important;
-            border-color: rgba(255,255,255,0.2) !important;
-        }
-
-        /* ── Primary button ── */
-        .btn-primary {
-            background: #FFFFFF !important;
-            color: #000000 !important;
-            border: none !important;
-            border-radius: 8px !important;
-            font-weight: 600 !important;
-        }
-        .btn-primary:hover {
-            background: rgba(255,255,255,0.9) !important;
-        }
-
         /* ── Chat bubbles ── */
         .msg-user {
             display: flex;
@@ -295,47 +431,6 @@ def main():
             color: rgba(255,255,255,0.6);
             font-weight: 500;
         }
-
-        /* ── Scrollbar ── */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { 
-            background: rgba(255,255,255,0.1); 
-            border-radius: 99px; 
-        }
-
-        /* ── Page transition feel ── */
-        .main-content {
-            animation: fadeUp 0.25s ease forwards;
-        }
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        /* ── Streamlit metric override ── */
-        [data-testid="stMetric"] {
-            background: rgba(255,255,255,0.03) !important;
-            border: 1px solid rgba(255,255,255,0.07) !important;
-            border-radius: 10px !important;
-            padding: 16px !important;
-        }
-        [data-testid="stMetricValue"] {
-            font-family: 'Instrument Serif', serif !important;
-            font-style: italic !important;
-            font-size: 2rem !important;
-            color: #FFFFFF !important;
-        }
-        [data-testid="stMetricLabel"] {
-            font-size: 10px !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.08em !important;
-            color: rgba(255,255,255,0.35) !important;
-        }
-
-        /* ── Altair/Vega chart background ── */
-        .vega-embed { background: transparent !important; }
-        canvas { background: transparent !important; }
         </style>
     """, unsafe_allow_html=True)
 

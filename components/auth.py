@@ -252,98 +252,192 @@ def is_session_valid() -> bool:
 def auth_page():
     """Render authentication page with modern UI"""
     
-    # Custom CSS for dark theme
-    st.markdown("""
-        <style>
-        .stApp {
-            background-color: #0E1117;
-        }
-        div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column;"] > div[data-testid="stVerticalBlock"] {
-            background-color: #161B22;
-            border: 1px solid #2A2F36;
-            border-radius: 10px;
-            padding: 20px;
-        }
-        .stTextInput > div > div > input {
-            background-color: #0E1117;
-            color: #FFFFFF;
-            border: 1px solid #2A2F36;
-        }
-        .stButton > button {
-            width: 100%;
-            background-color: #238636;
-            color: white;
-        }
-        .stButton > button:hover {
-            background-color: #2ea043;
-        }
-        p, div, span, label {
-            color: #A0A0A0 !important;
-        }
-        h1, h2, h3, h4, h5, h6 {
-            color: #FFFFFF !important;
-        }
-        .stAlert {
-            border-radius: 6px;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-    
     # Session expiry check
     if st.session_state.get('logged_in', False) and not is_session_valid():
         st.warning("Session expired. Please login again.")
         return
+
+    st.markdown("""
+    <style>
+    /* Hide sidebar on auth page */
+    [data-testid="stSidebar"] { display: none !important; }
     
-    tab1, tab2 = st.tabs(["🔐 Login", "📝 Register"])
+    .auth-container {
+        max-width: 400px;
+        margin: 80px auto 0;
+        padding: 0 20px;
+    }
+    .auth-logo {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    .auth-logo-text {
+        font-family: 'Instrument Serif', serif;
+        font-style: italic;
+        font-size: 2.5rem;
+        color: #FFFFFF;
+        letter-spacing: -1px;
+    }
+    .auth-logo-sub {
+        font-size: 11px;
+        color: rgba(255,255,255,0.2);
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        margin-top: 4px;
+    }
+    .auth-card {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 16px;
+        padding: 32px;
+        position: relative;
+        overflow: hidden;
+    }
+    .auth-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, 
+            rgba(255,255,255,0.15), transparent);
+    }
+    .auth-title {
+        font-family: 'Instrument Serif', serif;
+        font-style: italic;
+        font-size: 1.5rem;
+        color: #FFFFFF;
+        margin-bottom: 4px;
+    }
+    .auth-subtitle {
+        font-size: 12px;
+        color: rgba(255,255,255,0.3);
+        margin-bottom: 24px;
+    }
+    .auth-switch {
+        text-align: center;
+        font-size: 12px;
+        color: rgba(255,255,255,0.3);
+        margin-top: 20px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Center the auth card
+    _, center, _ = st.columns([1, 2, 1])
     
-    with tab1:
-        st.subheader("Welcome Back")
+    with center:
+        # Logo
+        st.markdown("""
+        <div class="auth-logo">
+            <div class="auth-logo-text">Infera</div>
+            <div class="auth-logo-sub">Study AI — Your Productivity OS</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Tab switcher between Login and Register
+        tab1, tab2 = st.tabs(["Sign In", "Create Account"])
         
-        with st.form("login_form"):
-            email = st.text_input("Email", placeholder="you@example.com")
-            password = st.text_input("Password", type="password", placeholder="Enter your password")
+        with tab1:
+            st.markdown("""
+            <div style="margin-bottom:20px;">
+                <div class="auth-title">Welcome back</div>
+                <div class="auth-subtitle">Sign in to continue your study session</div>
+            </div>
+            """, unsafe_allow_html=True)
             
-            col1, col2 = st.columns([1, 1])
-            with col1:
-                submit = st.form_submit_button("Log In", use_container_width=True)
-            
-            if submit:
-                if not email or not password:
-                    st.error("Please fill in all fields")
-                else:
-                    if login_user(email, password):
-                        st.rerun()
-    
-    with tab2:
-        st.subheader("Create Account")
-        st.caption("Please use a strong password for security")
-        
-        with st.form("register_form"):
-            name = st.text_input("Full Name", placeholder="John Doe")
-            email = st.text_input("Email", placeholder="you@example.com")
-            password = st.text_input("Password", type="password", placeholder="Create a password")
-            confirm_password = st.text_input("Confirm Password", type="password", placeholder="Confirm your password")
-            
-            # Real-time password strength indicator
-            if password:
-                is_strong, strength_msg = validate_password_strength(password)
-                if is_strong:
-                    st.success(f"✓ {strength_msg}")
-                else:
-                    st.warning(f"⚠️ {strength_msg}")
-            
-            submit = st.form_submit_button("Register", use_container_width=True)
-            
-            if submit:
-                if not all([name, email, password, confirm_password]):
-                    st.error("Please fill in all fields")
-                else:
-                    success, message = register_user(name, email, password, confirm_password)
-                    if success:
-                        st.success(message)
-                        st.info("Please go to the Login tab to continue")
+            with st.form("login_form"):
+                email = st.text_input("Email address", 
+                    placeholder="you@example.com")
+                password = st.text_input("Password", 
+                    type="password", placeholder="••••••••")
+                submitted = st.form_submit_button("Sign In", 
+                    use_container_width=True)
+                
+                if submitted:
+                    if not email or not password:
+                        st.error("Please fill in all fields")
                     else:
-                        st.error(message)
+                        if login_user(email, password):
+                            st.rerun()
+        
+        with tab2:
+            st.markdown("""
+            <div style="margin-bottom:20px;">
+                <div class="auth-title">Create account</div>
+                <div class="auth-subtitle">Start your productivity journey</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            with st.form("register_form"):
+                name = st.text_input("Full name", 
+                    placeholder="Your name")
+                email = st.text_input("Email address", 
+                    placeholder="you@example.com")
+                password = st.text_input("Password", 
+                    type="password", placeholder="Min 6 characters")
+                confirm = st.text_input("Confirm password", 
+                    type="password", placeholder="••••••••")
+                submitted = st.form_submit_button("Create Account",
+                    use_container_width=True)
+                
+                if submitted:
+                    if not all([name, email, password, confirm]):
+                        st.error("Please fill in all fields")
+                    else:
+                        success, message = register_user(name, email, password, confirm)
+                        if success:
+                            st.success(message)
+                            st.info("Please go to the Sign In tab to continue")
+                        else:
+                            st.error(message)
+
+        # Style the tabs
+        st.markdown("""
+        <style>
+        .stTabs [data-baseweb="tab-list"] {
+            background: rgba(255,255,255,0.03) !important;
+            border: 1px solid rgba(255,255,255,0.07) !important;
+            border-radius: 8px !important;
+            padding: 3px !important;
+            gap: 2px !important;
+        }
+        .stTabs [data-baseweb="tab"] {
+            border-radius: 6px !important;
+            color: rgba(255,255,255,0.4) !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            padding: 8px 20px !important;
+        }
+        .stTabs [aria-selected="true"] {
+            background: rgba(255,255,255,0.08) !important;
+            color: #FFFFFF !important;
+        }
+        .stTabs [data-baseweb="tab-highlight"] {
+            display: none !important;
+        }
+        .stTabs [data-baseweb="tab-border"] {
+            display: none !important;
+        }
+        /* Make Sign In button white */
+        .stForm [data-testid="stFormSubmitButton"] button {
+            background: #FFFFFF !important;
+            color: #000000 !important;
+            border: none !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            padding: 12px !important;
+            border-radius: 8px !important;
+            letter-spacing: 0.02em !important;
+            margin-top: 8px !important;
+            transition: all 0.15s ease !important;
+        }
+        .stForm [data-testid="stFormSubmitButton"] button:hover {
+            background: rgba(255,255,255,0.9) !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
 
 def logout():
     """Secure logout with complete session cleanup"""
