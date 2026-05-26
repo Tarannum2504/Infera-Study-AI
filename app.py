@@ -62,12 +62,7 @@ def main():
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
         }
 
-        /* Ensure content renders above background */
-        .main, [data-testid="stSidebar"],
-        .block-container, section {
-            position: relative;
-            z-index: 1;
-        }
+
 
         /* Page fade-in animation */
         .block-container {
@@ -118,26 +113,7 @@ def main():
             height: 18px !important;
         }
 
-        /* Sidebar open state — make sure it's visible */
-        [data-testid="stSidebar"][aria-expanded="true"] {
-            display: block !important;
-            visibility: visible !important;
-            transform: translateX(0) !important;
-            width: 288px !important;
-        }
 
-        /* Sidebar collapsed state */
-        [data-testid="stSidebar"][aria-expanded="false"] {
-            transform: translateX(-288px) !important;
-            width: 288px !important;
-        }
-
-        /* Main content shifts when sidebar opens */
-        [data-testid="stSidebar"][aria-expanded="true"] ~ 
-        .main .block-container {
-            margin-left: 288px !important;
-            transition: margin-left 0.25s ease !important;
-        }
 
         /* Nav button hover glow effect */
         [data-testid="stSidebar"] .stButton button {
