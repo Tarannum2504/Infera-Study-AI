@@ -73,14 +73,14 @@ else:
     volume_score = 0.0
     focus_score = round(productivity_pct * 0.4, 1)
 
-# SECTION 1 — KPI ROW (using custom HTML grid with Instrument Serif italic digits)
+# SECTION 1 â€” KPI ROW (using custom HTML grid with Instrument Serif italic digits)
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.markdown(f"""
         <div class="kpi-card">
           <div class="kpi-value">{total_hours}h</div>
           <div class="kpi-label">Total Hours</div>
-          <div class="kpi-delta">+1.8h this week</div>
+          <div class="kpi-delta">all time</div>
         </div>
     """, unsafe_allow_html=True)
 with col2:
@@ -88,7 +88,7 @@ with col2:
         <div class="kpi-card">
           <div class="kpi-value">{focus_score}</div>
           <div class="kpi-label">Focus Score</div>
-          <div class="kpi-delta">+2.4% this week</div>
+          <div class="kpi-delta">composite score</div>
         </div>
     """, unsafe_allow_html=True)
 with col3:
@@ -96,7 +96,7 @@ with col3:
         <div class="kpi-card">
           <div class="kpi-value">{completed_tasks}</div>
           <div class="kpi-label">Tasks Done</div>
-          <div class="kpi-delta">+2 done this week</div>
+          <div class="kpi-delta">completed</div>
         </div>
     """, unsafe_allow_html=True)
 with col4:
@@ -104,14 +104,14 @@ with col4:
         <div class="kpi-card">
           <div class="kpi-value">{productivity_pct}%</div>
           <div class="kpi-label">Productivity %</div>
-          <div class="kpi-delta">+4.2% this week</div>
+          <div class="kpi-delta">completion rate</div>
         </div>
     """, unsafe_allow_html=True)
 
 st.write("")
 st.write("")
 
-# SECTION 2 — CHARTS
+# SECTION 2 â€” CHARTS
 chart_col1, chart_col2 = st.columns(2)
 
 # Chart 1: Weekly Study Hours Data
@@ -128,26 +128,48 @@ for d in last_7_days:
 
 weekly_df = pd.DataFrame(weekly_data).iloc[::-1]
 
-# Weekly hours chart
-chart1 = alt.Chart(weekly_df).mark_bar(
-    color='rgba(255,255,255,0.7)',
-    cornerRadiusTopLeft=3,
-    cornerRadiusTopRight=3
-).encode(
-    x=alt.X('date:T', axis=alt.Axis(labelColor='rgba(255,255,255,0.35)', 
-        gridColor='rgba(255,255,255,0.05)', titleColor='rgba(255,255,255,0.35)',
-        labelAngle=-30)),
-    y=alt.Y('hours:Q', axis=alt.Axis(labelColor='rgba(255,255,255,0.35)',
-        gridColor='rgba(255,255,255,0.05)', titleColor='rgba(255,255,255,0.35)'))
-).properties(
-    height=200,
-    background='transparent',
-    title=alt.TitleParams('Daily Study Hours', 
-        color='rgba(255,255,255,0.5)', fontSize=12)
-)
 
+
+# Weekly hours chart
 with chart_col1:
+    st.markdown("<div style='background:rgba(8,6,18,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:8px; backdrop-filter:blur(20px);'>", unsafe_allow_html=True)
+    chart1 = alt.Chart(weekly_df).mark_bar(
+        color='rgba(200, 180, 255, 0.85)',
+        cornerRadiusTopLeft=3,
+        cornerRadiusTopRight=3
+    ).encode(
+        x=alt.X('date:T', axis=alt.Axis(
+            labelColor='rgba(255,255,255,0.5)',
+            gridColor='rgba(255,255,255,0.06)',
+            titleColor='rgba(255,255,255,0.4)',
+            domainColor='rgba(255,255,255,0.1)',
+            tickColor='rgba(255,255,255,0.1)',
+            labelFont='Inter',
+            titleFont='Inter',
+            labelAngle=-30
+        )),
+        y=alt.Y('hours:Q', axis=alt.Axis(
+            labelColor='rgba(255,255,255,0.5)',
+            gridColor='rgba(255,255,255,0.06)',
+            titleColor='rgba(255,255,255,0.4)',
+            domainColor='rgba(255,255,255,0.1)',
+            tickColor='rgba(255,255,255,0.1)',
+            labelFont='Inter',
+            titleFont='Inter'
+        ))
+    ).properties(
+        background='transparent',
+        height=220,
+        padding={"left": 25, "top": 15, "right": 30, "bottom": 15},
+        title=alt.TitleParams(
+            text='Daily Study Hours',
+            color='rgba(255,255,255,0.55)',
+            fontSize=12,
+            font='Inter'
+        )
+    )
     st.altair_chart(chart1, use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # Chart 2: Subject Distribution Data
 if sessions:
@@ -158,25 +180,44 @@ else:
     subject_df = pd.DataFrame(columns=['subject', 'hours'])
 
 # Subject distribution chart
-chart2 = alt.Chart(subject_df).mark_bar(
-    color='rgba(255,255,255,0.6)',
-    cornerRadiusTopLeft=3,
-    cornerRadiusTopRight=3
-).encode(
-    x=alt.X('hours:Q', axis=alt.Axis(labelColor='rgba(255,255,255,0.35)',
-        gridColor='rgba(255,255,255,0.05)', titleColor='rgba(255,255,255,0.35)')),
-    y=alt.Y('subject:N', sort='-x', 
-        axis=alt.Axis(labelColor='rgba(255,255,255,0.5)',
-        gridColor='rgba(255,255,255,0.05)', titleColor='rgba(255,255,255,0.35)'))
-).properties(
-    height=200,
-    background='transparent',
-    title=alt.TitleParams('Hours by Subject',
-        color='rgba(255,255,255,0.5)', fontSize=12)
-)
-
 with chart_col2:
+    st.markdown("<div style='background:rgba(8,6,18,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:8px; backdrop-filter:blur(20px);'>", unsafe_allow_html=True)
+    chart2 = alt.Chart(subject_df).mark_bar(
+        color='rgba(200, 180, 255, 0.85)',
+        cornerRadiusTopLeft=3,
+        cornerRadiusTopRight=3
+    ).encode(
+        x=alt.X('hours:Q', axis=alt.Axis(
+            labelColor='rgba(255,255,255,0.5)',
+            gridColor='rgba(255,255,255,0.06)',
+            titleColor='rgba(255,255,255,0.4)',
+            domainColor='rgba(255,255,255,0.1)',
+            tickColor='rgba(255,255,255,0.1)',
+            labelFont='Inter',
+            titleFont='Inter'
+        )),
+        y=alt.Y('subject:N', sort='-x', axis=alt.Axis(
+            labelColor='rgba(255,255,255,0.5)',
+            gridColor='rgba(255,255,255,0.06)',
+            titleColor='rgba(255,255,255,0.4)',
+            domainColor='rgba(255,255,255,0.1)',
+            tickColor='rgba(255,255,255,0.1)',
+            labelFont='Inter',
+            titleFont='Inter'
+        ))
+    ).properties(
+        background='transparent',
+        height=220,
+        padding={"left": 35, "top": 15, "right": 30, "bottom": 15},
+        title=alt.TitleParams(
+            text='Hours by Subject',
+            color='rgba(255,255,255,0.55)',
+            fontSize=12,
+            font='Inter'
+        )
+    )
     st.altair_chart(chart2, use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # Chart 3: Productivity Trend Data (full width)
 if sessions:
@@ -193,64 +234,68 @@ else:
     trend_df = pd.DataFrame(columns=['Date', 'Focus Score'])
 
 # Productivity trend line chart with Inline Axis settings to avoid TypeError
+st.markdown("<div style='background:rgba(8,6,18,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:8px; backdrop-filter:blur(20px);'>", unsafe_allow_html=True)
 chart3 = alt.Chart(trend_df).mark_line(
-    color='rgba(255,255,255,0.5)',
-    strokeWidth=1.5
+    color='rgba(220, 180, 255, 0.9)',
+    strokeWidth=2
 ).encode(
-    x=alt.X('Date:T', axis=alt.Axis(labelColor='rgba(255,255,255,0.35)',
-        gridColor='rgba(255,255,255,0.05)', titleColor='rgba(255,255,255,0.35)')),
-    y=alt.Y('Focus Score:Q', scale=alt.Scale(domain=[0, 100]),
-        axis=alt.Axis(labelColor='rgba(255,255,255,0.35)',
-        gridColor='rgba(255,255,255,0.05)', titleColor='rgba(255,255,255,0.35)'))
+    x=alt.X('Date:T', axis=alt.Axis(
+        labelColor='rgba(255,255,255,0.5)',
+        gridColor='rgba(255,255,255,0.06)',
+        titleColor='rgba(255,255,255,0.4)',
+        domainColor='rgba(255,255,255,0.1)',
+        tickColor='rgba(255,255,255,0.1)',
+        labelFont='Inter',
+        titleFont='Inter'
+    )),
+    y=alt.Y('Focus Score:Q', scale=alt.Scale(domain=[0, 100]), axis=alt.Axis(
+        labelColor='rgba(255,255,255,0.5)',
+        gridColor='rgba(255,255,255,0.06)',
+        titleColor='rgba(255,255,255,0.4)',
+        domainColor='rgba(255,255,255,0.1)',
+        tickColor='rgba(255,255,255,0.1)',
+        labelFont='Inter',
+        titleFont='Inter'
+    ))
 ).properties(
-    height=200,
     background='transparent',
-    title=alt.TitleParams('Productivity Trend (Daily Focus Score)',
-        color='rgba(255,255,255,0.5)', fontSize=12)
+    height=220,
+    padding={"left": 25, "top": 15, "right": 30, "bottom": 15},
+    title=alt.TitleParams(
+        text='Productivity Trend (Daily Focus Score)',
+        color='rgba(255,255,255,0.55)',
+        fontSize=12,
+        font='Inter'
+    )
 )
-
 st.altair_chart(chart3, use_container_width=True)
+st.markdown("</div>", unsafe_allow_html=True)
 
-# SECTION 3 — RECENT SESSIONS TABLE
+# SECTION 3 â€” RECENT SESSIONS TABLE
 st.markdown("""
 <div class="section-title" style="font-size:1.1rem; margin:28px 0 12px;">
 Recent Sessions</div>
 """, unsafe_allow_html=True)
 
-st.markdown("""
-<style>
-[data-testid="stDataFrame"] {
-    background: rgba(255,255,255,0.02) !important;
-    border: 1px solid rgba(255,255,255,0.06) !important;
-    border-radius: 8px !important;
-}
-[data-testid="stDataFrame"] table {
-    color: rgba(255,255,255,0.8) !important;
-}
-[data-testid="stDataFrame"] th {
-    background: rgba(255,255,255,0.04) !important;
-    color: rgba(255,255,255,0.35) !important;
-    font-size: 10px !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.08em !important;
-}
-</style>
-""", unsafe_allow_html=True)
+
 
 recent_sessions = get_recent_sessions(user_id, limit=20)
-if recent_sessions:
-    sessions_df = pd.DataFrame(recent_sessions)
-    sessions_df = sessions_df[['subject','duration_minutes','date']]
-    sessions_df.columns = ['Subject', 'Duration (min)', 'Date']
-    sessions_df['Status'] = sessions_df['Duration (min)'].apply(
-        lambda x: 'Complete' if x >= 25 else 'Partial')
-    st.dataframe(sessions_df, hide_index=True, use_container_width=True)
+rows = ""
+if not recent_sessions:
+    rows = "<tr><td colspan='4' style='padding:16px 14px; color:rgba(255,255,255,0.25); text-align:center; font-size:13px;'>No study sessions logged yet</td></tr>"
 else:
-    st.markdown("<p style='font-size:12px; color:rgba(255,255,255,0.25);'>No study sessions logged yet.</p>", unsafe_allow_html=True)
+    for i, s in enumerate(recent_sessions):
+        status = "Complete" if s["duration_minutes"] >= 25 else "Partial"
+        sc = "rgba(150,220,150,0.8)" if status == "Complete" else "rgba(255,180,100,0.8)"
+        bg = "rgba(255,255,255,0.02)" if i % 2 == 0 else "transparent"
+        rows += f"<tr style='background:{bg};'><td style='padding:10px 14px; color:rgba(255,255,255,0.85); border-bottom:1px solid rgba(255,255,255,0.04); font-size:13px;'>{s['subject']}</td><td style='padding:10px 14px; color:rgba(255,255,255,0.55); border-bottom:1px solid rgba(255,255,255,0.04); font-size:13px;'>{s['duration_minutes']} min</td><td style='padding:10px 14px; color:rgba(255,255,255,0.55); border-bottom:1px solid rgba(255,255,255,0.04); font-size:13px;'>{s['date']}</td><td style='padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.04);'><span style='font-size:11px; padding:2px 10px; border-radius:99px; border:1px solid {sc}; color:{sc};'>{status}</span></td></tr>"
+
+st.markdown(f"<table style='width:100%; border-collapse:collapse; background:rgba(8,6,18,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; overflow:hidden; backdrop-filter:blur(20px);'><thead><tr style='border-bottom:1px solid rgba(255,255,255,0.08);'><th style='padding:10px 14px; text-align:left; font-size:10px; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:0.1em; font-weight:500;'>Subject</th><th style='padding:10px 14px; text-align:left; font-size:10px; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:0.1em; font-weight:500;'>Duration</th><th style='padding:10px 14px; text-align:left; font-size:10px; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:0.1em; font-weight:500;'>Date</th><th style='padding:10px 14px; text-align:left; font-size:10px; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:0.1em; font-weight:500;'>Status</th></tr></thead><tbody>{rows}</tbody></table>", unsafe_allow_html=True)
+
 
 st.write("")
 
-# SECTION 4 — AI PRODUCTIVITY INSIGHT (styled with .glass-card)
+# SECTION 4 â€” AI PRODUCTIVITY INSIGHT (styled with .glass-card)
 st.markdown("""
 <div class="section-title" style="font-size:1.1rem; margin:28px 0 12px;">
 AI Productivity Insight</div>

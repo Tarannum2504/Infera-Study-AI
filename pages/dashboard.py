@@ -16,7 +16,11 @@ st.markdown("""
 <style>
 .main .block-container {
     padding: 32px 40px !important;
-    max-width: 1100px !important;
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+}
+table {
+    max-width: 100% !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -85,7 +89,6 @@ with col1:
         <div class="kpi-card">
           <div class="kpi-value">{study_hours}h</div>
           <div class="kpi-label">Study Hours</div>
-          <div class="kpi-delta">+2.4h this week</div>
         </div>
     """, unsafe_allow_html=True)
 with col2:
@@ -93,7 +96,6 @@ with col2:
         <div class="kpi-card">
           <div class="kpi-value">{focus_score}</div>
           <div class="kpi-label">Focus Score</div>
-          <div class="kpi-delta">+5.1% this week</div>
         </div>
     """, unsafe_allow_html=True)
 with col3:
@@ -101,30 +103,10 @@ with col3:
         <div class="kpi-card">
           <div class="kpi-value">{completed_tasks}</div>
           <div class="kpi-label">Tasks Completed</div>
-          <div class="kpi-delta">+3 this week</div>
         </div>
     """, unsafe_allow_html=True)
 
-# Custom DataFrame styling
-st.markdown("""
-<style>
-[data-testid="stDataFrame"] {
-    background: rgba(255,255,255,0.02) !important;
-    border: 1px solid rgba(255,255,255,0.06) !important;
-    border-radius: 8px !important;
-}
-[data-testid="stDataFrame"] table {
-    color: rgba(255,255,255,0.8) !important;
-}
-[data-testid="stDataFrame"] th {
-    background: rgba(255,255,255,0.04) !important;
-    color: rgba(255,255,255,0.35) !important;
-    font-size: 10px !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.08em !important;
-}
-</style>
-""", unsafe_allow_html=True)
+
 
 # HIGH PRIORITY SECTION
 st.markdown("""
@@ -140,13 +122,14 @@ cursor.execute("""
 """, (user_id,))
 high_priority_tasks = cursor.fetchall()
 
-if high_priority_tasks:
-    high_priority_df = pd.DataFrame([dict(r) for r in high_priority_tasks])
-    high_priority_df = high_priority_df[['Title', 'Subject', 'Deadline']]
-    high_priority_df.columns = ['Task', 'Subject', 'Deadline']
-    st.dataframe(high_priority_df, hide_index=True, use_container_width=True)
+rows = ""
+if not high_priority_tasks:
+    rows = "<tr><td colspan='3' style='padding:16px 14px; color:rgba(255,255,255,0.25); text-align:center; font-size:13px;'>No high priority tasks</td></tr>"
 else:
-    st.markdown("<p style='font-size:12px; color:rgba(255,255,255,0.25);'>No high priority tasks.</p>", unsafe_allow_html=True)
+    for t in high_priority_tasks:
+        rows += f"<tr><td style='padding:10px 14px; color:rgba(255,255,255,0.85); border-bottom:1px solid rgba(255,255,255,0.05); font-size:13px;'>{t['Title']}</td><td style='padding:10px 14px; color:rgba(255,255,255,0.5); border-bottom:1px solid rgba(255,255,255,0.05); font-size:13px;'>{t['Subject']}</td><td style='padding:10px 14px; color:rgba(255,255,255,0.5); border-bottom:1px solid rgba(255,255,255,0.05); font-size:13px;'>{t['Deadline']}</td></tr>"
+
+st.markdown(f"<table style='width:100%; border-collapse:collapse; background:rgba(8,6,18,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; overflow:hidden; backdrop-filter:blur(20px);'><thead><tr style='border-bottom:1px solid rgba(255,255,255,0.08);'><th style='padding:10px 14px; text-align:left; font-size:10px; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:0.1em; font-weight:500;'>Task</th><th style='padding:10px 14px; text-align:left; font-size:10px; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:0.1em; font-weight:500;'>Subject</th><th style='padding:10px 14px; text-align:left; font-size:10px; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:0.1em; font-weight:500;'>Deadline</th></tr></thead><tbody>{rows}</tbody></table>", unsafe_allow_html=True)
 
 # UPCOMING DEADLINES SECTION
 st.markdown("""
@@ -163,12 +146,14 @@ cursor.execute("""
 upcoming_tasks = cursor.fetchall()
 conn.close()
 
-if upcoming_tasks:
-    upcoming_df = pd.DataFrame([dict(r) for r in upcoming_tasks])
-    upcoming_df = upcoming_df[['Title', 'Subject', 'Deadline']]
-    upcoming_df.columns = ['Task', 'Subject', 'Deadline']
-    st.dataframe(upcoming_df, hide_index=True, use_container_width=True)
+rows2 = ""
+if not upcoming_tasks:
+    rows2 = "<tr><td colspan='3' style='padding:16px 14px; color:rgba(255,255,255,0.25); text-align:center; font-size:13px;'>No upcoming deadlines in the next 7 days</td></tr>"
 else:
-    st.markdown("<p style='font-size:12px; color:rgba(255,255,255,0.25);'>No upcoming deadlines in the next 7 days.</p>", unsafe_allow_html=True)
+    for t in upcoming_tasks:
+        rows2 += f"<tr><td style='padding:10px 14px; color:rgba(255,255,255,0.85); border-bottom:1px solid rgba(255,255,255,0.05); font-size:13px;'>{t['Title']}</td><td style='padding:10px 14px; color:rgba(255,255,255,0.5); border-bottom:1px solid rgba(255,255,255,0.05); font-size:13px;'>{t['Subject']}</td><td style='padding:10px 14px; color:rgba(255,255,255,0.5); border-bottom:1px solid rgba(255,255,255,0.05); font-size:13px;'>{t['Deadline']}</td></tr>"
+
+st.markdown(f"<table style='width:100%; border-collapse:collapse; background:rgba(8,6,18,0.55); border:1px solid rgba(255,255,255,0.08); border-radius:10px; overflow:hidden; backdrop-filter:blur(20px);'><thead><tr style='border-bottom:1px solid rgba(255,255,255,0.08);'><th style='padding:10px 14px; text-align:left; font-size:10px; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:0.1em; font-weight:500;'>Task</th><th style='padding:10px 14px; text-align:left; font-size:10px; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:0.1em; font-weight:500;'>Subject</th><th style='padding:10px 14px; text-align:left; font-size:10px; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:0.1em; font-weight:500;'>Deadline</th></tr></thead><tbody>{rows2}</tbody></table>", unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
+

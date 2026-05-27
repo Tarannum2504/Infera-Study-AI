@@ -14,12 +14,13 @@
 
 ### 2.2 Minimalist Dashboard (`pages/dashboard.py`)
 * Designed with a clean, high-performance, and minimalist layout.
-* **KPI Metrics** (displayed side-by-side using `st.columns(3)` & `st.metric`):
-  * **Study Hours**: Total accumulated study duration (`SUM(duration_minutes)/60.0` from `study_sessions`).
+* **KPI Metrics** (displayed side-by-side using `st.columns` & custom HTML glass cards):
+  * **Study Hours**: Total accumulated study duration.
   * **Focus Score**: Dynamically computed overall focus percentage.
   * **Tasks Completed**: Count of completed tasks (`status='done'`).
-* **High Priority & Upcoming**: Table displaying the top 5 high-priority pending tasks, sorted by deadline.
-* **Upcoming Deadlines**: Table displaying the top 5 pending tasks with a deadline on or after today, sorted by deadline.
+  * Note: Removed arbitrary hardcoded deltas to ensure accurate, clean data presentation.
+* **High Priority & Upcoming**: Custom styled HTML/CSS glassmorphic tables replacing default `st.dataframe` for displaying pending tasks, sorted by deadline.
+* **Upcoming Deadlines**: Custom styled HTML/CSS glassmorphic table for tasks with deadlines within the next 7 days.
 * No charts, no streak metrics, no active task count to keep the home screen clean.
 
 ### 2.3 Task Manager (`pages/tasks.py`)
@@ -35,7 +36,7 @@
   * Muted Grey (`#A0A0A0`) for progress $< 100\%$.
   * Green (`#43A047`) for progress $= 100\%$.
 * **Glassmorphic Card UI**: Cleanly styled `st.container(border=True)` elements styled as premium liquid glass cards (`div[data-testid="stVerticalBlockBorderWrapper"]`) with transparent dark-glass backgrounds, subtle borders, high blurs, and hover highlight transitions.
-* **Direct Actions**: Custom "Done ✓" (sets progress to 100% and status to `'done'`) and "Delete ×" buttons are pinned side-by-side beneath each inline progress slider inside the card container.
+* **Direct Actions**: Custom "Done ✓" and "Delete ×" buttons. The "Done" button uses an `on_click` callback (`mark_done`) to seamlessly synchronize the database update with the slider's session state, preventing infinite reruns and state clashing.
 
 ### 2.4 Infera Flow (`pages/infera_flow.py`)
 * Replaced the standard Pomodoro timer with a custom "Infera Flow" focused study module.
@@ -55,11 +56,12 @@
   * Focus Score (0–100).
   * Completed Tasks.
   * Productivity % (`completed_tasks / total_tasks * 100`).
-* **Greyscale Data Visualizations** (Altair-powered):
+* **Greyscale & Purple Data Visualizations** (Altair-powered):
   * *Weekly Study Hours*: 7-day rolling study duration (Bar Chart).
   * *Subject Distribution*: Study hours broken down by subject (Horizontal Bar Chart).
   * *Productivity Trend*: Daily focus score tracking over time (Line Chart).
-* **Recent Sessions**: High-fidelity table displaying the last 20 study sessions (Date, Subject, Duration) with status marked as `"Complete"` (duration >= 25 mins) or `"Partial"`.
+  * Charts are individually wrapped in custom frosted glass HTML containers (`<div style="backdrop-filter:blur...">`) with increased internal padding to prevent right-edge label clipping.
+* **Recent Sessions**: High-fidelity custom HTML table (replacing `st.dataframe`) displaying the last 20 study sessions with dynamic pill-shaped status badges (`"Complete"` or `"Partial"`).
 * **AI Productivity Insight**: Leverages Meta's Llama-3.1-8b-instruct model to analyze the user's historical study sessions and tasks and generate highly personalized actionable productivity recommendations.
 
 ### 2.6 AI Study Planner (`pages/planner.py`)
@@ -73,6 +75,7 @@
 * Powered by Llama-3.1-8b-instruct.
 
 ### 2.8 Profile Settings (`pages/profile.py`)
+* Automatically applies `max-width: 750px` to the main container, preventing full-width stretching on ultra-wide screens and ensuring perfect left-alignment of titles, forms, and stats.
 * **Account Information**: Supports updating the user's Full Name and Email Address.
 * **Change Password**: Custom module verifying the current password via `bcrypt` and updating it securely in the database.
 * **Account Stats**: Read-only dashboard metrics:

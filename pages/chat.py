@@ -25,6 +25,58 @@ st.markdown("""
     padding: 32px 40px !important;
     max-width: 1100px !important;
 }
+
+/* Chat input container — semi transparent */
+[data-testid="stBottom"] {
+    background: rgba(8, 6, 18, 0.6) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-top: 1px solid rgba(255,255,255,0.08) !important;
+}
+[data-testid="stBottom"] > div {
+    background: transparent !important;
+}
+
+/* Chat input field */
+[data-testid="stChatInput"] {
+    background: rgba(255,255,255,0.06) !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    border-radius: 12px !important;
+    backdrop-filter: blur(10px) !important;
+}
+[data-testid="stChatInput"] textarea {
+    background: transparent !important;
+    color: #FFFFFF !important;
+}
+[data-testid="stChatInput"]:focus-within {
+    border-color: rgba(180,140,220,0.4) !important;
+    box-shadow: 0 0 0 3px rgba(150,100,200,0.12) !important;
+}
+
+/* Chat messages visibility */
+.msg-user-inner, .msg-ai-inner {
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+}
+.msg-user-inner {
+    background: rgba(100, 80, 160, 0.35) !important;
+    border: 1px solid rgba(180,140,220,0.2) !important;
+    color: #FFFFFF !important;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.4) !important;
+}
+.msg-ai-inner {
+    background: rgba(8, 6, 18, 0.55) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    color: rgba(255,255,255,0.92) !important;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.4) !important;
+}
+
+/* Token badge */
+.token-badge {
+    background: rgba(8,6,18,0.5) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255,255,255,0.07) !important;
+}
 </style>
 """, unsafe_allow_html=True)
 

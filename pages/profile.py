@@ -14,19 +14,43 @@ st.markdown("""
     <style>
     .main .block-container {
         padding: 32px 40px !important;
-        max-width: 1100px !important;
+        max-width: 750px !important;
     }
-    div[data-testid="stForm"] {
-        background-color: #161B22 !important;
-        border: 1px solid rgba(255,255,255,0.08) !important;
-        border-radius: 8px !important;
-        padding: 20px !important;
+    
+    /* Profile form card — frosted glass like rest of app */
+    [data-testid="stForm"] {
+        background: rgba(8, 6, 18, 0.55) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        border-radius: 12px !important;
+        backdrop-filter: blur(24px) !important;
+        -webkit-backdrop-filter: blur(24px) !important;
+        padding: 24px !important;
     }
-    p, label, span, div {
-        color: rgba(255,255,255,0.4) !important;
+    [data-testid="stForm"] > div {
+        background: transparent !important;
     }
-    h1, h2, h3, h4, h5, h6, strong, b {
+
+    /* Input fields inside form — semi transparent */
+    [data-testid="stForm"] .stTextInput input {
+        background: rgba(255,255,255,0.06) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
         color: #FFFFFF !important;
+    }
+
+    /* Style subheaders, headings, and strong texts to be solid white */
+    .main-content h3, .main-content h2, .main-content h1, .main-content strong {
+        color: #FFFFFF !important;
+    }
+
+    /* Target profile specific typography to be highly legible */
+    .main-content .stats-heading {
+        color: #FFFFFF !important;
+    }
+    .main-content .stats-value {
+        color: #FFFFFF !important;
+    }
+    .main-content .stats-label {
+        color: rgba(255,255,255,0.7) !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -99,15 +123,78 @@ with st.form("profile_form"):
 st.write("")
 
 # SECTION 2 — ACCOUNT STATS
-st.subheader("Account Stats")
 stats = get_profile_stats(user_id)
 
+st.markdown("<div style='margin-top:32px;'>", 
+    unsafe_allow_html=True)
+st.markdown("""
+<div class="stats-heading" style="font-family:'Instrument Serif',serif; 
+font-style:italic; font-size:1.4rem; color:#FFFFFF; 
+margin-bottom:16px;">Account Stats</div>
+""", unsafe_allow_html=True)
+
 col1, col2, col3 = st.columns(3)
+
 with col1:
-    st.metric("Member Since", stats.get('member_since', 'N/A'))
+    st.markdown(f"""
+    <div style="background:rgba(8,6,18,0.55); 
+    border:1px solid rgba(255,255,255,0.1); 
+    border-radius:10px; padding:20px; 
+    backdrop-filter:blur(20px);
+    position:relative; overflow:hidden;">
+    <div style="position:absolute; top:0; left:0; right:0; 
+    height:1px; background:linear-gradient(90deg, transparent, 
+    rgba(255,255,255,0.12), transparent);"></div>
+    <div class="stats-value" style="font-family:'Instrument Serif',serif; 
+    font-style:italic; font-size:1.8rem; color:#FFFFFF; 
+    line-height:1; letter-spacing:-0.5px;">
+    {stats['member_since']}</div>
+    <div class="stats-label" style="font-size:10px; color:rgba(255,255,255,0.7); 
+    text-transform:uppercase; letter-spacing:0.1em; 
+    margin-top:8px; font-weight:500;">Member Since</div>
+    </div>
+    """, unsafe_allow_html=True)
+
 with col2:
-    st.metric("Total Sessions", stats.get('total_sessions', 0))
+    st.markdown(f"""
+    <div style="background:rgba(8,6,18,0.55); 
+    border:1px solid rgba(255,255,255,0.1); 
+    border-radius:10px; padding:20px; 
+    backdrop-filter:blur(20px);
+    position:relative; overflow:hidden;">
+    <div style="position:absolute; top:0; left:0; right:0; 
+    height:1px; background:linear-gradient(90deg, transparent, 
+    rgba(255,255,255,0.12), transparent);"></div>
+    <div class="stats-value" style="font-family:'Instrument Serif',serif; 
+    font-style:italic; font-size:1.8rem; color:#FFFFFF; 
+    line-height:1; letter-spacing:-0.5px;">
+    {stats['total_sessions']}</div>
+    <div class="stats-label" style="font-size:10px; color:rgba(255,255,255,0.7); 
+    text-transform:uppercase; letter-spacing:0.1em; 
+    margin-top:8px; font-weight:500;">Total Sessions</div>
+    </div>
+    """, unsafe_allow_html=True)
+
 with col3:
-    st.metric("Tasks Created", stats.get('tasks_created', 0))
+    st.markdown(f"""
+    <div style="background:rgba(8,6,18,0.55); 
+    border:1px solid rgba(255,255,255,0.1); 
+    border-radius:10px; padding:20px; 
+    backdrop-filter:blur(20px);
+    position:relative; overflow:hidden;">
+    <div style="position:absolute; top:0; left:0; right:0; 
+    height:1px; background:linear-gradient(90deg, transparent, 
+    rgba(255,255,255,0.12), transparent);"></div>
+    <div class="stats-value" style="font-family:'Instrument Serif',serif; 
+    font-style:italic; font-size:1.8rem; color:#FFFFFF; 
+    line-height:1; letter-spacing:-0.5px;">
+    {stats['tasks_created']}</div>
+    <div class="stats-label" style="font-size:10px; color:rgba(255,255,255,0.7); 
+    text-transform:uppercase; letter-spacing:0.1em; 
+    margin-top:8px; font-weight:500;">Tasks Created</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)

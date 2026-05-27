@@ -38,17 +38,18 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # INPUT AREA
-syllabus = st.text_area("Paste your syllabus or topics here", height=200, key="syllabus_input", placeholder="Enter syllabus details or specific topics...")
+with st.form("planner_form"):
+    syllabus = st.text_area("Paste your syllabus or topics here", height=200, key="syllabus_input", placeholder="Enter syllabus details or specific topics...")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        study_days = st.number_input("Study days available", min_value=1, max_value=90, value=7)
+    with col2:
+        hours_per_day = st.number_input("Hours per day", min_value=1, max_value=12, value=3)
+    
+    submit_button = st.form_submit_button("Generate Study Plan")
 
-col1, col2 = st.columns(2)
-with col1:
-    study_days = st.number_input("Study days available", min_value=1, max_value=90, value=7)
-with col2:
-    hours_per_day = st.number_input("Hours per day", min_value=1, max_value=12, value=3)
-
-st.write("")
-
-if st.button("Generate Study Plan"):
+if submit_button:
     if not syllabus.strip():
         st.error("Please enter your syllabus or topics.")
     else:

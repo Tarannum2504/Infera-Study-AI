@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from database.db import init_db
 from components.auth import auth_page, logout, is_session_valid
 
@@ -12,57 +13,57 @@ st.set_page_config(
 def main():
     init_db()
 
+    # Load and inject animated background component
+    with open('components/background.html', 'r') as f:
+        bg_html = f.read()
+
+    st.markdown("""
+<style>
+/* Make the component iframe fixed as background */
+iframe {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: -1 !important;
+    border: none !important;
+    pointer-events: none !important;
+}
+/* Make app transparent so background shows through */
+html, body,
+.stApp,
+[data-testid="stAppViewContainer"],
+[data-testid="stMainViewContainer"],
+[data-testid="stApp"],
+.main,
+[data-testid="stHeader"] {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+    components.html(bg_html, height=1, scrolling=False)
+
     # Global CSS injection featuring Animated Subtle Grain Overlay and Glowing Orbs
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap');
 
-        /* Base */
+        /* Base styling over transparent background */
         html, body, .stApp {
-            background-color: #060810 !important;
             font-family: 'Inter', sans-serif !important;
             color: #FFFFFF !important;
         }
-
-        /* Animated orb background */
-        .stApp::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            background:
-                radial-gradient(ellipse 700px 500px at 15% 15%,
-                    rgba(255,255,255,0.04) 0%,
-                    transparent 70%),
-                radial-gradient(ellipse 500px 400px at 85% 75%,
-                    rgba(255,255,255,0.025) 0%,
-                    transparent 65%),
-                radial-gradient(ellipse 400px 600px at 60% 20%,
-                    rgba(255,255,255,0.015) 0%,
-                    transparent 60%);
-            animation: orbShift 18s ease-in-out infinite alternate;
+        html, body,
+        .stApp,
+        [data-testid="stAppViewContainer"],
+        [data-testid="stMainViewContainer"],
+        [data-testid="stApp"] {
+            background: transparent !important;
+            background-color: transparent !important;
         }
-
-        @keyframes orbShift {
-            0%   { opacity: 0.7; transform: scale(1) translateY(0px); }
-            33%  { opacity: 1;   transform: scale(1.05) translateY(-20px); }
-            66%  { opacity: 0.8; transform: scale(0.97) translateY(10px); }
-            100% { opacity: 1;   transform: scale(1.03) translateY(-10px); }
-        }
-
-        /* Noise texture overlay */
-        .stApp::after {
-            content: '';
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            opacity: 0.025;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
-        }
-
-
 
         /* Page fade-in animation */
         .block-container {
@@ -75,11 +76,39 @@ def main():
             to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* ── Sidebar base ── */
+        /* ── Cards — frosted glass over colorful bg ── */
+        .glass-card,
+        [data-testid="stMetric"],
+        [data-testid="stDataFrame"],
+        [data-testid="stForm"],
+        .stExpander,
+        .kpi-card {
+            background: rgba(10, 8, 20, 0.55) !important;
+            border: 1px solid rgba(255,255,255,0.12) !important;
+            backdrop-filter: blur(24px) !important;
+            -webkit-backdrop-filter: blur(24px) !important;
+            border-radius: 12px !important;
+        }
+        [data-testid="stForm"] {
+            padding: 24px !important;
+        }
+        [data-testid="stForm"] > div {
+            background: transparent !important;
+        }
+        .glass-card {
+            padding: 20px !important;
+            transition: border-color 0.2s ease !important;
+        }
+        .glass-card:hover {
+            border-color: rgba(255,255,255,0.15) !important;
+        }
+
+        /* ── Sidebar — frosted dark glass ── */
         [data-testid="stSidebar"] {
-            background: rgba(8, 10, 16, 0.95) !important;
-            border-right: 1px solid rgba(255,255,255,0.06) !important;
-            backdrop-filter: blur(20px) !important;
+            background: rgba(8, 6, 18, 0.75) !important;
+            border-right: 1px solid rgba(255,255,255,0.08) !important;
+            backdrop-filter: blur(30px) !important;
+            -webkit-backdrop-filter: blur(30px) !important;
         }
 
         /* Force sidebar toggle button to always show */
@@ -112,8 +141,6 @@ def main():
             width: 18px !important;
             height: 18px !important;
         }
-
-
 
         /* Nav button hover glow effect */
         [data-testid="stSidebar"] .stButton button {
@@ -156,21 +183,37 @@ def main():
             border-radius: 99px; 
         }
 
-        /* ── Input fields ── */
+        /* ── Input fields — glass style ── */
+        div[data-baseweb="input"],
+        div[data-baseweb="textarea"],
+        div[data-baseweb="select"] {
+            background: rgba(255,255,255,0.06) !important;
+            border: 1px solid rgba(255,255,255,0.12) !important;
+            border-radius: 8px !important;
+            transition: border-color 0.2s ease !important;
+        }
         .stTextInput input, .stTextArea textarea,
         .stSelectbox select, .stNumberInput input {
-            background: rgba(255,255,255,0.04) !important;
-            border: 1px solid rgba(255,255,255,0.08) !important;
-            border-radius: 8px !important;
+            background: transparent !important;
+            border: none !important;
             color: #FFFFFF !important;
             font-family: 'Inter', sans-serif !important;
             font-size: 13px !important;
-            transition: border-color 0.2s ease !important;
         }
-        .stTextInput input:focus, .stTextArea textarea:focus {
-            border-color: rgba(255,255,255,0.2) !important;
-            box-shadow: 0 0 0 3px rgba(255,255,255,0.04) !important;
+        div[data-baseweb="input"]:focus-within, 
+        div[data-baseweb="textarea"]:focus-within {
+            border-color: rgba(180, 140, 200, 0.5) !important;
+            box-shadow: 0 0 0 3px rgba(150, 100, 180, 0.15) !important;
             outline: none !important;
+        }
+        div[data-testid="stNumberInput"] button {
+            background: rgba(255,255,255,0.05) !important;
+            border: none !important;
+            color: #FFFFFF !important;
+            transition: background 0.2s ease !important;
+        }
+        div[data-testid="stNumberInput"] button:hover {
+            background: rgba(255,255,255,0.15) !important;
         }
         .stTextInput label, .stTextArea label,
         .stSelectbox label, .stNumberInput label {
@@ -183,22 +226,22 @@ def main():
 
         /* ── Buttons ── */
         .stButton button {
-            background: rgba(255,255,255,0.05) !important;
-            border: 1px solid rgba(255,255,255,0.09) !important;
+            background: rgba(255,255,255,0.08) !important;
+            border: 1px solid rgba(255,255,255,0.14) !important;
+            color: #FFFFFF !important;
+            backdrop-filter: blur(10px) !important;
             border-radius: 8px !important;
-            color: rgba(255,255,255,0.8) !important;
             font-family: 'Inter', sans-serif !important;
             font-size: 13px !important;
             font-weight: 500 !important;
-            transition: all 0.15s ease !important;
+            transition: all 0.2s ease !important;
             letter-spacing: 0.01em !important;
         }
         .stButton button:hover {
-            background: rgba(255,255,255,0.09) !important;
-            border-color: rgba(255,255,255,0.18) !important;
-            color: #FFFFFF !important;
+            background: rgba(255,255,255,0.15) !important;
+            border-color: rgba(255,255,255,0.28) !important;
             transform: translateY(-1px) !important;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4) !important;
         }
 
         /* ── Primary button ── */
@@ -214,25 +257,9 @@ def main():
         }
 
         /* ── Metrics ── */
-        [data-testid="stMetric"] {
-            background: rgba(255,255,255,0.03) !important;
-            border: 1px solid rgba(255,255,255,0.07) !important;
-            border-radius: 10px !important;
-            padding: 16px 20px !important;
-            position: relative !important;
-            overflow: hidden !important;
-            transition: border-color 0.2s ease !important;
-        }
         [data-testid="stMetric"]:hover {
-            border-color: rgba(255,255,255,0.12) !important;
-        }
-        [data-testid="stMetric"]::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, 
-                rgba(255,255,255,0.12), transparent);
+            border-color: rgba(255,255,255,0.22) !important;
+            background: rgba(10, 8, 20, 0.65) !important;
         }
         [data-testid="stMetricValue"] {
             font-family: 'Instrument Serif', serif !important;
@@ -240,204 +267,262 @@ def main():
             font-size: 2.2rem !important;
             color: #FFFFFF !important;
             letter-spacing: -1px !important;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.4) !important;
         }
         [data-testid="stMetricLabel"] {
             font-size: 10px !important;
             text-transform: uppercase !important;
             letter-spacing: 0.1em !important;
-            color: rgba(255,255,255,0.3) !important;
+            color: rgba(255,255,255,0.45) !important;
             font-weight: 500 !important;
         }
 
-        /* ── Dataframe ── */
-        [data-testid="stDataFrame"] {
-            border: 1px solid rgba(255,255,255,0.06) !important;
-            border-radius: 8px !important;
-            overflow: hidden !important;
+        /* ── Dataframe over colorful bg ── */
+        [data-testid="stDataFrame"],
+        div.stDataFrameGlideDataEditor,
+        .stDataFrame,
+        [data-testid="stDataFrameResizable"] {
+            background: rgba(10, 8, 20, 0.55) !important;
+            background-color: rgba(10, 8, 20, 0.55) !important;
+            border: 1px solid rgba(255,255,255,0.12) !important;
+            border-radius: 12px !important;
+            backdrop-filter: blur(24px) !important;
+            -webkit-backdrop-filter: blur(24px) !important;
+
+            /* Glide Data Grid theming custom variables */
+            --gdg-bg-cell: rgba(10, 8, 20, 0.55) !important;
+            --gdg-bg-cell-medium: rgba(14, 11, 26, 0.6) !important;
+            --gdg-bg-header: rgba(21, 19, 37, 0.75) !important;
+            --gdg-bg-header-hover: rgba(30, 27, 52, 0.8) !important;
+            --gdg-text-dark: #ffffff !important;
+            --gdg-text-medium: rgba(255, 255, 255, 0.85) !important;
+            --gdg-text-light: rgba(255, 255, 255, 0.6) !important;
+            --gdg-border-color: rgba(255, 255, 255, 0.1) !important;
+            --gdg-accent-color: rgba(150, 100, 200, 0.3) !important;
+            --gdg-accent-light: rgba(150, 100, 200, 0.15) !important;
+        }
+        [data-testid="stDataFrame"] [data-testid="stDataFrameResizable"] {
+            background: transparent !important;
+            background-color: transparent !important;
+        }
+        [data-testid="stDataFrame"] canvas {
+            background: transparent !important;
+            background-color: transparent !important;
+        }
+
+        /* ── Slider track over colorful bg ── */
+        .stSlider [data-baseweb="slider"] [role="progressbar"] {
+            background: rgba(180, 140, 220, 0.7) !important;
+        }
+        .stSlider [data-baseweb="slider"] [role="slider"] {
+            background: #FFFFFF !important;
+            box-shadow: 0 2px 12px rgba(150, 100, 200, 0.6) !important;
+        }
+
+        /* ── Auth page card ── */
+        .auth-card {
+            background: rgba(8, 6, 18, 0.7) !important;
+            border: 1px solid rgba(255,255,255,0.12) !important;
+            backdrop-filter: blur(30px) !important;
+        }
+
+        /* ── Tab styling over colorful bg ── */
+        .stTabs [data-baseweb="tab-list"] {
+            background: rgba(255,255,255,0.05) !important;
+            backdrop-filter: blur(10px) !important;
         }
 
         /* ── Altair charts ── */
         .vega-embed, canvas { background: transparent !important; }
+        [data-testid="stVegaLiteChart"] {
+            background: rgba(8, 6, 18, 0.65) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            border-radius: 12px !important;
+            padding: 16px !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+        }
 
         /* ── Headings ── */
-        h1, h2, h3, h4, h5, h6 {
+        h1, h2, h3, .section-title {
+            font-family: 'Instrument Serif', serif !important;
+            font-style: italic !important;
+            color: #FFFFFF !important;
+            text-shadow: 0 2px 20px rgba(0,0,0,0.5) !important;
+        }
+        h4, h5, h6 {
             font-family: 'Instrument Serif', serif !important;
             font-style: italic !important;
             color: #FFFFFF !important;
             letter-spacing: -0.5px !important;
         }
-        p, span, div, label {
-            color: rgba(255,255,255,0.75);
-        }
-
-        /* ── Liquid glass card ── */
-        .glass-card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 12px;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: 20px;
-            transition: border-color 0.2s ease;
-        }
-        .glass-card:hover {
-            border-color: rgba(255,255,255,0.15);
+        p, span, label, div {
+            color: rgba(255,255,255,0.85) !important;
         }
 
         /* ── KPI metric cards ── */
         .kpi-card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.07);
-            border-radius: 10px;
-            padding: 18px 20px;
-            position: relative;
-            overflow: hidden;
+            padding: 18px 20px !important;
+            position: relative !important;
+            overflow: hidden !important;
         }
         .kpi-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 1px;
+            content: '' !important;
+            position: absolute !important;
+            top: 0 !important; left: 0 !important; right: 0 !important;
+            height: 1px !important;
             background: linear-gradient(90deg, 
                 transparent, 
                 rgba(255,255,255,0.15), 
-                transparent);
+                transparent) !important;
         }
         .kpi-value {
-            font-family: 'Instrument Serif', serif;
-            font-style: italic;
-            font-size: 2.2rem;
-            color: #FFFFFF;
-            line-height: 1;
-            letter-spacing: -1px;
+            font-family: 'Instrument Serif', serif !important;
+            font-style: italic !important;
+            font-size: 2.2rem !important;
+            color: #FFFFFF !important;
+            line-height: 1 !important;
+            letter-spacing: -1px !important;
         }
         .kpi-label {
-            font-size: 11px;
-            color: rgba(255,255,255,0.4);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin-top: 6px;
-            font-weight: 500;
+            font-size: 11px !important;
+            color: rgba(255,255,255,0.4) !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.08em !important;
+            margin-top: 6px !important;
+            font-weight: 500 !important;
         }
         .kpi-delta {
-            font-size: 11px;
-            color: rgba(255,255,255,0.3);
-            margin-top: 4px;
+            font-size: 11px !important;
+            color: rgba(255,255,255,0.3) !important;
+            margin-top: 4px !important;
         }
 
         /* ── Section headings ── */
         .section-title {
-            font-family: 'Instrument Serif', serif;
-            font-style: italic;
-            font-size: 1.8rem;
-            color: #FFFFFF;
-            letter-spacing: -0.5px;
-            line-height: 1.1;
+            font-size: 1.8rem !important;
+            line-height: 1.1 !important;
         }
         .section-sub {
-            font-size: 12px;
-            color: rgba(255,255,255,0.35);
-            font-weight: 400;
-            margin-top: 4px;
-            letter-spacing: 0.02em;
+            font-size: 12px !important;
+            color: rgba(255,255,255,0.35) !important;
+            font-weight: 400 !important;
+            margin-top: 4px !important;
+            letter-spacing: 0.02em !important;
         }
 
         /* ── Dividers ── */
         .subtle-divider {
-            height: 1px;
-            background: rgba(255,255,255,0.06);
-            margin: 16px 0;
+            height: 1px !important;
+            background: rgba(255,255,255,0.06) !important;
+            margin: 16px 0 !important;
         }
 
         /* ── Table styling ── */
         .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
+            width: 100% !important;
+            border-collapse: collapse !important;
+            font-size: 13px !important;
         }
         .data-table th {
-            text-align: left;
-            padding: 8px 12px;
-            color: rgba(255,255,255,0.3);
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            font-weight: 500;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
+            text-align: left !important;
+            padding: 8px 12px !important;
+            color: rgba(255,255,255,0.3) !important;
+            font-size: 10px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.1em !important;
+            font-weight: 500 !important;
+            border-bottom: 1px solid rgba(255,255,255,0.06) !important;
         }
         .data-table td {
-            padding: 10px 12px;
-            color: rgba(255,255,255,0.8);
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            vertical-align: middle;
+            padding: 10px 12px !important;
+            color: rgba(255,255,255,0.8) !important;
+            border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+            vertical-align: middle !important;
         }
         .data-table tr:hover td {
-            background: rgba(255,255,255,0.02);
+            background: rgba(255,255,255,0.02) !important;
         }
 
         /* ── Progress bar ── */
         .progress-track {
-            background: rgba(255,255,255,0.07);
-            border-radius: 99px;
-            height: 4px;
-            width: 100%;
-            overflow: hidden;
+            background: rgba(255,255,255,0.07) !important;
+            border-radius: 99px !important;
+            height: 4px !important;
+            width: 100% !important;
+            overflow: hidden !important;
         }
         .progress-fill {
-            height: 100%;
-            border-radius: 99px;
-            transition: width 0.3s ease;
+            height: 100% !important;
+            border-radius: 99px !important;
+            transition: width 0.3s ease !important;
         }
 
         /* ── Chat bubbles ── */
         .msg-user {
-            display: flex;
-            justify-content: flex-end;
-            margin: 6px 0;
+            display: flex !important;
+            justify-content: flex-end !important;
+            margin: 6px 0 !important;
         }
         .msg-user-inner {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px 12px 2px 12px;
-            padding: 10px 14px;
-            max-width: 62%;
-            font-size: 13px;
-            line-height: 1.55;
-            color: #FFFFFF;
+            background: rgba(255,255,255,0.08) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            border-radius: 12px 12px 2px 12px !important;
+            padding: 10px 14px !important;
+            max-width: 62% !important;
+            font-size: 13px !important;
+            line-height: 1.55 !important;
+            color: #FFFFFF !important;
         }
         .msg-ai {
-            display: flex;
-            justify-content: flex-start;
-            margin: 6px 0;
+            display: flex !important;
+            justify-content: flex-start !important;
+            margin: 6px 0 !important;
         }
         .msg-ai-inner {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.07);
-            border-radius: 2px 12px 12px 12px;
-            padding: 10px 14px;
-            max-width: 62%;
-            font-size: 13px;
-            line-height: 1.55;
-            color: rgba(255,255,255,0.85);
+            background: rgba(255,255,255,0.03) !important;
+            border: 1px solid rgba(255,255,255,0.07) !important;
+            border-radius: 2px 12px 12px 12px !important;
+            padding: 10px 14px !important;
+            max-width: 62% !important;
+            font-size: 13px !important;
+            line-height: 1.55 !important;
+            color: rgba(255,255,255,0.85) !important;
         }
 
         /* ── Token stats badge ── */
         .token-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.07);
-            border-radius: 99px;
-            padding: 5px 14px;
-            font-size: 11px;
-            color: rgba(255,255,255,0.35);
-            font-family: 'Inter', sans-serif;
-            margin-top: 8px;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            background: rgba(255,255,255,0.03) !important;
+            border: 1px solid rgba(255,255,255,0.07) !important;
+            border-radius: 99px !important;
+            padding: 5px 14px !important;
+            font-size: 11px !important;
+            color: rgba(255,255,255,0.35) !important;
+            font-family: 'Inter', sans-serif !important;
+            margin-top: 8px !important;
         }
         .token-badge span {
-            color: rgba(255,255,255,0.6);
-            font-weight: 500;
+            color: rgba(255,255,255,0.6) !important;
+            font-weight: 500 !important;
+        }
+
+        /* ── Mobile responsiveness & load fix ── */
+        @media (max-width: 768px) {
+            .block-container {
+                padding: 16px !important;
+            }
+            [data-testid="stSidebar"] {
+                width: 260px !important;
+            }
+        }
+
+        /* Ensure no white flash on load */
+        html, body {
+            background: transparent !important;
+            background-color: transparent !important;
         }
         </style>
     """, unsafe_allow_html=True)

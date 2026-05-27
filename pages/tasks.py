@@ -9,6 +9,12 @@ if not st.session_state.get('logged_in'):
 
 user_id = st.session_state['user_id']
 
+def mark_done(task_id):
+    update_task_status(task_id, 'done', 100)
+    key = f"progress_slider_{task_id}"
+    if key in st.session_state:
+        del st.session_state[key]
+
 # Custom padding system & Slider styling
 st.markdown("""
 <style>
@@ -221,9 +227,7 @@ else:
             # Pinned Done and Delete buttons below the slider
             c1, c2 = st.columns([1, 1])
             with c1:
-                if st.button("Done ✓", key=f"done_{task_id}", use_container_width=True):
-                    update_task_status(task_id, 'done', 100)
-                    st.rerun()
+                st.button("Done ✓", key=f"done_{task_id}", use_container_width=True, on_click=mark_done, args=(task_id,))
             with c2:
                 if st.button("Delete ×", key=f"del_{task_id}", use_container_width=True):
                     delete_task(task_id)
